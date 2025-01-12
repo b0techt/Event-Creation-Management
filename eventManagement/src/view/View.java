@@ -1,31 +1,28 @@
 package view;
-import java.sql.Time;
-
-import controller.*;
 public class View {
     public void printStart(){
         System.out.println("Hello, User and Welcome to Tailored Events.");
-		System.out.print("""
-                                 Are you a User or Admin.
-                                 1. User
-                                 2. Admin
-								 0. Exit	""");
-
+		System.out.print("1. User\n2. Admin\n3. Exit");
     }
 
-    public void areYouUser(){
-        System.out.print("""
-                    1. Current User
-                    2. New User
-                    3. Back to Main Menu
-                    """);
+    public void loginForAdmin(){
+        System.out.println("\nPlease login for admin controls.");
     }
 
-    public void printUserMenu(){
-        System.out.print("""
-                1. Create Event
-                2. Edit Event Tickets
-                0. Exit """);
+    public void firstUserMenu(){
+        System.out.print("\n1. Current User\n2. New User\n3. Back to Main Menu");
+    }
+
+    public void firstAdminMenu(){
+        System.out.print("\n1. See Users\n2. Confirm Events\n3. Back to Main Menu");
+    }
+
+    public void eventsMenu(){
+       System.out.print("\n1. Create Event\n2. Edit Event\n3. Back to Main Menu");
+    }
+
+    public void ticketsMenu(){
+        System.out.print("\n1. View Available Ticket Types\n2. Edit Tickets\n3. Back to Main Menu");
     }
 
     public void closingMessage(){

@@ -1,11 +1,12 @@
 
 import model.Model;
 import controller.Controller;
+import java.io.IOException;
 import view.View;
 
 public class Driver {
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 		//model
 		Model m = new Model();
 

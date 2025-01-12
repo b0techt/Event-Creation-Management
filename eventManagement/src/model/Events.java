@@ -25,7 +25,7 @@ public class Events {
         return this.eventID;
     }
 
-     public String getEvenet(){         //get new event name
+     public String getEventName(){         //get new event name
         return this.eventName;
     }
 

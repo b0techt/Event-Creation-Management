@@ -1,9 +1,5 @@
 package model;
-import controller.*;
-import java.io.FileNotFoundException;
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
+
 import java.util.*;
 
 public class Model {
@@ -29,20 +25,6 @@ public class Model {
         return this.admins;
     }
 
-    public String getCurrentUser(String userName)throws FileNotFoundException, IOException{ //get current user if not create new user
-        for(User user : users){
-            if (user.getUserName().equals(userName)) {
-                try (BufferedReader br = new BufferedReader(new FileReader(userName + ".txt"))) {
-                    String line = br.readLine();
-                    while(line != null){
-                        System.out.println(line);
-                    }
-                }
-            }
-        }
-        return "Please create a new user";
-    }
-
     public void addUser(User newUser){ //set new user
         users.add(newUser);
     }
@@ -58,15 +40,15 @@ public class Model {
         return this.events;
     }
 
-    public List<Tickets>getTickets(){
+    public List<Tickets>getTickets(){ //get list of tickets available in the events
         return this.tickets;
     }
 
-    public void addTicket(Tickets ticket){
+    public void addTicket(Tickets ticket){ //add tickets
         tickets.add(ticket);
     }
 
-    public void addEvent(Events event){
+    public void addEvent(Events event){ //add new events
         events.add(event);
     }
 
