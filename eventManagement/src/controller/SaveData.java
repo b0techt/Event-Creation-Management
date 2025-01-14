@@ -1,7 +1,7 @@
 package controller;
 import java.io.*;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 import model.Model;
 import model.User;
 
@@ -50,12 +50,12 @@ public class SaveData {
         return "Username saved.";
     }
 
-    public List<String>listOfUserNames()throws IOException{
-        List<String>usernames = new ArrayList<>();
+    public List<User>listOfUserNames()throws IOException{
+        List<User>usernames = new ArrayList<>();
         try(BufferedReader br = new BufferedReader(new FileReader(ul))){
             String line;
             while((line = br.readLine()) != null){
-                usernames.add(line);
+                usernames.add(new User(line));
             }
             return usernames;
         }

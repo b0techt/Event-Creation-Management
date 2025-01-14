@@ -25,6 +25,15 @@ public class Model {
         return this.admins;
     }
 
+    public boolean isUserCreated(String userName){
+        for(User use : getUsers()){
+            if(use.getUserName().equals(userName)){
+                return true;
+            }
+        }
+        return false;
+    }
+
     public void addUser(User newUser){ //set new user
         users.add(newUser);
     }
