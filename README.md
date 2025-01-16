@@ -6,4 +6,4 @@ A event creation management system where Users can create, edit and publish even
 * edit event to support multiple tickets with availability (VIP, early bird, regular)
 
 # Administrator Capabilities
-* approve, edit and delete events before they are released to the public 
+* approve or delete events before they are released to the public 
