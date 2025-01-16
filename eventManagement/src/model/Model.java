@@ -7,12 +7,14 @@ public class Model {
     private Admin admins;
     private List<User> users;
     private List<Events> events;
+    private List<Events>unapprovedEvents;
 
     public Model(){
         this.admins = new Admin("", "");
         this.users = new ArrayList<>();
         this.tickets = new ArrayList<>();
         this.events = new ArrayList<>();
+        this.unapprovedEvents = new ArrayList<>();
     }
 
     //users and admin meths 
@@ -47,6 +49,15 @@ public class Model {
 
     public List<Events>getEvents(){ //get list of events available to users, only see events created by other users
         return this.events;
+    }
+
+    public List<Events>getUnapprovedEvents(){
+        for(Events e : getEvents()){
+            if(e.getEventStatus() == 0){
+                unapprovedEvents.add(e);
+            }
+        }
+        return unapprovedEvents;
     }
 
     public List<Tickets>getTickets(){ //get list of tickets available in the events

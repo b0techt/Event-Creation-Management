@@ -9,12 +9,14 @@ public class Tickets {
     private double ticketPrice;     //price of ticket
     private int ticketAvailability; //availability of ticket
     private int maxTicketAvailability; //maximum availability of a ticket
+    private int eventId;
 
 
-    public Tickets(String typeOfTicket, double priceOfTicket, int maximumAvailability){
+    public Tickets(String typeOfTicket, double priceOfTicket, int maximumAvailability, Events events){
         this.ticketType = typeOfTicket;
         this.ticketPrice = priceOfTicket;
         this.maxTicketAvailability = maximumAvailability;
+        this.eventId = events.getEventID();
     }
 
     public String getTicketType(){

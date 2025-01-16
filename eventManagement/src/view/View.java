@@ -17,6 +17,10 @@ public class View {
         System.out.print("\n1. See Users\n2. Confirm Events\n3. Back to Main Menu");
     }
 
+    public void secondUserMenu(){
+        System.out.print("\n1. Events Menu\n2. Tickets Menu\n3. Back to Main Menu");
+    }
+
     public void eventsMenu(){
        System.out.print("\n1. Create Event\n2. Edit Event\n3. Back to Main Menu");
     }

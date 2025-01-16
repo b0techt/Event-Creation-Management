@@ -2,12 +2,14 @@ package controller;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import model.Events;
 import model.Model;
 import model.User;
 
 public class SaveData {
     private Model users;
     private final String ul = "eventManagement\\db\\listOfUsers.txt";
+    private final String userPath = "eventManagement\\db\\dbUser";
     private BufferedWriter bw;
     private boolean append;
 
@@ -59,5 +61,25 @@ public class SaveData {
             }
             return usernames;
         }
+    }
+
+    public String saveUserEvent(Events event, String userData){
+        try{
+           File userFile = new File(userPath,userData+".txt");
+           if(userFile.exists()){
+            bw = new BufferedWriter(new FileWriter(userFile, true));
+            bw.newLine();
+           }else{
+            userFile.createNewFile();
+            bw = new BufferedWriter(new FileWriter(userFile, false));
+           }
+
+           bw.write("Status: "+event.statusString()+" Event ID: "+event.getEventID()+" Event Name: "+event.getEventName()+" Event Description: "+event.getEventDescription()+
+           " Event Date: "+event.getEventDate()+" Event Time: "+event.getEventTime()+" Event Location: "+event.getEventLocation());
+           bw.close();
+        }catch(IOException ioe){
+            System.err.println("Could not save event to User file.");
+        }
+        return "Event has been saved.";
     }
 }
