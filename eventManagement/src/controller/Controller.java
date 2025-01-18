@@ -1,5 +1,6 @@
 package controller;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.*;
 import model.*;
 import view.View;
@@ -42,6 +43,12 @@ public class Controller  {
 
     //start app
     public void start() throws IOException{
+        try(var connect = saveData.connectToDatabase()) { //code block in the wrong place, should open and close connection for event, user and ticket saving
+            System.out.println("Connection to database established.");
+        } catch (SQLException sqle) {
+            System.err.println("Could not establish a connection to the database.");
+        }
+        System.out.println();
         loadUsers(); //store user list to from file
         mainMenu(); 
     }

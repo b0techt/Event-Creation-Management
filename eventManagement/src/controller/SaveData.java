@@ -1,4 +1,5 @@
 package controller;
+import java.sql.*;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -6,12 +7,22 @@ import model.Events;
 import model.Model;
 import model.User;
 
-public class SaveData {
+public class SaveData implements SqlConnection {
     private Model users;
     private final String ul = "eventManagement\\db\\listOfUsers.txt";
     private final String userPath = "eventManagement\\db\\dbUser";
+    private final ConfigSQL sql = new ConfigSQL();
     private BufferedWriter bw;
     private boolean append;
+    
+    @Override
+    public Connection connectToDatabase(){
+        try {
+            return DriverManager.getConnection(sql.getUrl(), sql.getDBuser(), sql.getDBpassword());
+        } catch (SQLException sqle) {
+            return null;
+        }
+    }
 
     public String getCurrentUserForEdits(String userName)throws FileNotFoundException, IOException{ //get current user if not create new user
         for(User user : users.getUsers()){
