@@ -7,4 +7,5 @@
 	</classpathentry>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="output" path="bin"/>
+	<classpathentry kind="lib" path="lib/postgresql-42.7.5.jar"/>
 </classpath>
