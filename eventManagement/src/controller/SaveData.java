@@ -10,7 +10,6 @@ import model.User;
 public class SaveData implements SqlConnection {
     private Model users;
     private final String ul = "eventManagement\\db\\listOfUsers.txt";
-    private final String userPath = "eventManagement\\db\\dbUser";
     private final ConfigSQL sql = new ConfigSQL();
     private BufferedWriter bw;
     private boolean append;
@@ -24,24 +23,12 @@ public class SaveData implements SqlConnection {
         }
     }
 
-    public String getCurrentUserForEdits(String userName)throws FileNotFoundException, IOException{ //get current user if not create new user
+    public void getCurrentUserForEdits(String userName)throws FileNotFoundException, IOException{ //get current user if not create new user
         for(User user : users.getUsers()){
             if (user.getUserName().equals(userName)) {
-                File userFile = new File(userName+".txt");
-                if (userFile.exists()) {
-                    try (BufferedReader br = new BufferedReader(new FileReader(userName + ".txt"))) {
-                        String line = br.readLine();
-                        while (line != null) {
-                            System.out.println(line);
-                        }
-                        return "Welcome " + userName;
-                    }
-                }
-                return "Please create a new user";
                 
             }
         }
-        return "Please create a new user";
     }
 
     public String saveUser(String userName){
@@ -63,7 +50,22 @@ public class SaveData implements SqlConnection {
         return "Username saved.";
     }
 
-    public List<User>listOfUserNames()throws IOException{
+    @Override
+    public void userIntoDB(String userName){
+        try(Connection connect = connectToDatabase()){
+            System.out.println("Connection established.");
+            String query = "INSERT INTO schema_events.users(username) VALUES (?)";
+            try(PreparedStatement stmt = connect.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)){
+                stmt.setString(1,userName);
+                stmt.executeUpdate();
+                System.out.println("Username saved to the database.");
+            }
+        }catch(SQLException | NullPointerException e){
+            System.err.println("Could not save User account. " + e.getMessage());
+        }
+    }
+
+    public List<User>listOfUserNames()throws IOException{ //helps load users for the admin to see
         List<User>usernames = new ArrayList<>();
         try(BufferedReader br = new BufferedReader(new FileReader(ul))){
             String line;
@@ -74,23 +76,26 @@ public class SaveData implements SqlConnection {
         }
     }
 
-    public String saveUserEvent(Events event, String userData){
-        try{
-           File userFile = new File(userPath,userData+".txt");
-           if(userFile.exists()){
-            bw = new BufferedWriter(new FileWriter(userFile, true));
-            bw.newLine();
-           }else{
-            userFile.createNewFile();
-            bw = new BufferedWriter(new FileWriter(userFile, false));
-           }
+    @Override
+    public void saveUserEvent(Events event, String userData){ //insert event data to database
+        try(Connection connect = connectToDatabase()){
+           String query = "INSERT INTO Schema_Events.EventsInfo(Usernames, EventName, EventDesc, EventDate, EventTime, EventLocation, Status)" 
+           + "VALUES(?,?,?,?,?,?,?)";
 
-           bw.write("Status: "+event.statusString()+" Event ID: "+event.getEventID()+" Event Name: "+event.getEventName()+" Event Description: "+event.getEventDescription()+
-           " Event Date: "+event.getEventDate()+" Event Time: "+event.getEventTime()+" Event Location: "+event.getEventLocation());
-           bw.close();
-        }catch(IOException ioe){
+           try(PreparedStatement stmt = connect.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
+               stmt.setString(1, userData);
+               stmt.setString(2, event.getEventName());
+               stmt.setString(3, event.getEventDescription());
+               stmt.setString(4, event.getEventDate());
+               stmt.setString(5, event.getEventTime());
+               stmt.setString(6, event.getEventLocation());
+               stmt.setString(7, event.statusString());
+
+               stmt.executeUpdate();
+               System.out.println("Event has been saved.");
+           }
+        }catch(SQLException | NullPointerException e){
             System.err.println("Could not save event to User file.");
         }
-        return "Event has been saved.";
     }
 }
