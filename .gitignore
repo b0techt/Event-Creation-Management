@@ -6,3 +6,4 @@ eventManagement/.vscode
 eventManagement/lib
 eventManagement/bin
 eventManagement/src/controller/ConfigSQL.java
+eventManagement/.classpath
