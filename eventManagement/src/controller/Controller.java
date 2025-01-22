@@ -1,6 +1,5 @@
 package controller;
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.*;
 import model.*;
 import view.View;
@@ -24,7 +23,7 @@ public class Controller  {
         this.saveData = new SaveData();
         this.user = new User("");
         this.admin = new Admin();
-        this.event = new Events(0, "", "", "", "", "", user);
+        this.event = new Events("", "", "", "", "", user);
     }
 
     public Scanner getInput(){
@@ -43,12 +42,6 @@ public class Controller  {
 
     //start app
     public void start() throws IOException{
-        try(var connect = saveData.connectToDatabase()) { //code block in the wrong place, should open and close connection for event, user and ticket saving
-            System.out.println("Connection to database established.");
-        } catch (SQLException sqle) {
-            System.err.println("Could not establish a connection to the database.");
-        }
-        System.out.println();
         loadUsers(); //store user list to from file
         mainMenu(); 
     }
@@ -111,39 +104,6 @@ public class Controller  {
         }
     }
 
-    public void addUserToFile(){ //adds user to list of users file for admin to see 
-        System.out.print("\nUsername: ");
-        this.user.setUserName(input.next());
-        if (model.isUserCreated(getUser().getUserName())) {
-            System.out.println("Cannot create user. Username already exist.\n");
-        }else{
-            System.out.println(saveData.saveUser(getUser().getUserName()));
-        }
-    }
-
-    public void loggingIn(){ //runs login method for admin
-        view.loginForAdmin();
-        System.out.print("Username: ");
-        String adminName = input.next();
-        System.out.print("Password: ");
-        String adminPass = input.next();
-        if(adminLogin(adminName, adminPass)){
-            try {
-                adminMenu(); 
-            } catch (IOException e) {
-                System.err.println("System error.");
-            }
-        }else{
-            System.out.println("Incorrect login. Redirecting to Main Menu.\n");
-            try {
-                mainMenu();
-            } catch (IOException ioe) {
-                System.err.println("System error.");
-                System.exit(0);
-            }
-        }
-    }
-
     /*
      * in events menu --> option 2: edit events --> 1. See Events 2. Back to Events Menu
      */
@@ -179,7 +139,52 @@ public class Controller  {
         } catch (InputMismatchException iome) {
             System.err.println(invalidInput);
             input.nextLine();
-            userEventsMenu();
+            subUserMenu();
+        }
+    }
+    
+    public void checkCurrentUser(){ //check if current user is in list of Users list
+        System.out.print("Enter username (No spaces): ");
+        this.user.setUserName(input.next());
+        if(model.isUserCreated(getUser().getUserName())){
+            subUserMenu();
+        }else{
+            System.out.println("User does not exist. Create a new user.\n");
+        }
+    }
+    
+    public void addUserToFile(){ //adds user to list of users file for admin to see 
+        System.out.print("\nUsername (No spaces): ");
+        this.user.setUserName(input.next());
+        if (model.isUserCreated(getUser().getUserName())) {
+            System.out.println("Cannot create user. Username already exist.\n");
+        }else{
+            saveData.userIntoDB(getUser().getUserName());
+            model.addUser(this.user);
+            System.out.println(saveData.saveUser(getUser().getUserName())+"\n");
+        }
+    }
+
+    public void loggingIn(){ //runs login method for admin
+        view.loginForAdmin();
+        System.out.print("Username: ");
+        String adminName = input.next();
+        System.out.print("Password: ");
+        String adminPass = input.next();
+        if(adminLogin(adminName, adminPass)){
+            try {
+                adminMenu(); 
+            } catch (IOException e) {
+                System.err.println("System error.");
+            }
+        }else{
+            System.out.println("Incorrect login. Redirecting to Main Menu.\n");
+            try {
+                mainMenu();
+            } catch (IOException ioe) {
+                System.err.println("System error.");
+                System.exit(0);
+            }
         }
     }
 
@@ -223,18 +228,6 @@ public class Controller  {
         return this.admin.login(name, password);
     }
 
-    // check for user file meth -- list of users in a file gets read into an arraylist. Each user has their own file to store their events and tickets
-
-    public void checkCurrentUser(){ //check if current user is in list of Users list
-        System.out.print("Enter username: ");
-        this.user.setUserName(input.next());
-        if(model.isUserCreated(getUser().getUserName())){
-            subUserMenu();
-        }else{
-            System.out.println("Create a new user.\n");
-        }
-    }
-
     public Events getEvent(){ //gets current event
         return this.event;
     }
@@ -242,16 +235,14 @@ public class Controller  {
     public void createEvent(){ //method for creating an event --> id, name, description, date, time, location
         try {
             System.out.print("\nEnter details below. ");
-            int eventID = userInt("\nEvent ID (4 digit) : ");
             input.nextLine();
-            String eventName = userString("Event Name: ");
+            String eventName = userString("\nEvent Name: ");
             String eventDescription = userString("Event Description: ");
             String eventDate = userString("Event Date (DD-MM-YYYY): ");
             String eventTime = userString("Event Time (HH:MM): ");
             String eventLocation = userString("Event Location: ");
             System.out.println();
 
-            this.event.setEventID(eventID);
             this.event.setEvent(eventName);
             this.event.setEventDescription(eventDescription);
             this.event.setEventDate(eventDate);
@@ -262,8 +253,8 @@ public class Controller  {
                 System.out.println("Errors above. Try again.");
                 createEvent();
             }else{
-                model.addEvent(this.event);
-                System.out.println(saveData.saveUserEvent(this.event, this.user.getUserName()));
+                //model.addEvent(this.event);
+                saveData.saveUserEvent(this.event, this.user.getUserName());
             }
         } catch (InputMismatchException ime) {
             System.err.println(invalidInput);

@@ -2,7 +2,6 @@ eventManagement/.project
 eventManagement/clipped_code.txt
 eventManagement/db/listOfUsers.txt
 eventManagement/db
-eventManagement/.vscode
 eventManagement/lib
 eventManagement/bin
 eventManagement/src/controller/ConfigSQL.java

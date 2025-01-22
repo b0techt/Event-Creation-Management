@@ -1,6 +1,6 @@
 package controller;
-import java.sql.*;
 import java.io.*;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import model.Events;
@@ -17,8 +17,12 @@ public class SaveData implements SqlConnection {
     @Override
     public Connection connectToDatabase(){
         try {
+            Class.forName("org.postgresql.Driver");
             return DriverManager.getConnection(sql.getUrl(), sql.getDBuser(), sql.getDBpassword());
-        } catch (SQLException sqle) {
+        } catch (SQLException | ClassNotFoundException e) {
+            System.err.println("Error occurred: "+e.getMessage());            
+            System.err.println(System.getProperty("java.class.path"));
+            System.exit(0);
             return null;
         }
     }
@@ -53,7 +57,6 @@ public class SaveData implements SqlConnection {
     @Override
     public void userIntoDB(String userName){
         try(Connection connect = connectToDatabase()){
-            System.out.println("Connection established.");
             String query = "INSERT INTO schema_events.users(username) VALUES (?)";
             try(PreparedStatement stmt = connect.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)){
                 stmt.setString(1,userName);
@@ -79,7 +82,7 @@ public class SaveData implements SqlConnection {
     @Override
     public void saveUserEvent(Events event, String userData){ //insert event data to database
         try(Connection connect = connectToDatabase()){
-           String query = "INSERT INTO Schema_Events.EventsInfo(Usernames, EventName, EventDesc, EventDate, EventTime, EventLocation, Status)" 
+           String query = "INSERT INTO Schema_Events.EventsInfo(Username, EventName, EventDesc, EventDate, EventTime, EventLocation, Status)" 
            + "VALUES(?,?,?,?,?,?,?)";
 
            try(PreparedStatement stmt = connect.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
@@ -95,6 +98,7 @@ public class SaveData implements SqlConnection {
                System.out.println("Event has been saved.");
            }
         }catch(SQLException | NullPointerException e){
+            System.err.println("Error occurred: " + e.getMessage());
             System.err.println("Could not save event to User file.");
         }
     }

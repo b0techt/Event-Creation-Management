@@ -3,7 +3,6 @@ package model;
  * unique id, name, location, description, date/time and created by user
  */
 public class Events {
-    private int eventID;
     private String eventName;
     private String eventLocation;  
     private String eventDescription;
@@ -12,8 +11,7 @@ public class Events {
     public String userName;
     private int status;
 
-    public Events(int eventIDs, String eventNameString, String eventLocationString, String eventDescString, String eventDateString, String eventTimeString, User user){
-        this.eventID = eventIDs;
+    public Events(String eventNameString, String eventLocationString, String eventDescString, String eventDateString, String eventTimeString, User user){
         this.eventName = eventNameString;
         this.eventLocation = eventLocationString;
         this.eventDescription = eventDescString;
@@ -21,10 +19,6 @@ public class Events {
         this.eventTime = eventTimeString;
         this.userName = user.getUserName();
         this.status = 0;
-    }
-
-    public int getEventID(){ //get new event id
-        return this.eventID;
     }
 
      public String getEventName(){ //get new event name
@@ -60,14 +54,6 @@ public class Events {
         return "Unapproved";
     }
 
-    public void setEventID(int newEventID){ //set new unique event id
-        if(newEventID < 1000 || newEventID > 9999){
-            System.out.println("Event ID must be 4 digits long.");
-        }else{
-            this.eventID = newEventID;
-        }
-    }
-
     public void setEvent(String newEvent){  //set new Event name upon new creation
         this.eventName = newEvent;
     }
@@ -101,6 +87,6 @@ public class Events {
     }
 
     public boolean invalidFields(){
-        return eventID == 0 || eventName.isEmpty() || eventDescription.isEmpty() || eventDate.isEmpty() || eventTime.isEmpty() || eventLocation.isEmpty();
+        return eventName.isEmpty() || eventDescription.isEmpty() || eventDate.isEmpty() || eventTime.isEmpty() || eventLocation.isEmpty();
     }
 }
