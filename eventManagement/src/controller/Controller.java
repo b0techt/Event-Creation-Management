@@ -42,6 +42,7 @@ public class Controller  {
 
     //start app
     public void start() throws IOException{
+        loadEventsAdmin();
         loadUsers(); //store user list to from file
         mainMenu(); 
     }
@@ -68,39 +69,42 @@ public class Controller  {
     }
 
     public void userMenu() throws IOException{ //main user menu
-        view.firstUserMenu();
-        System.out.print("\n>> ");
-        try {
-            int choice = input.nextInt();
-            switch (choice) {
-                case 1 -> checkCurrentUser();
-                case 2 -> addUserToFile();
-                case 3 -> { System.out.println(); return; }
-                default -> { System.err.println(outOfRange); }
+        while(running){
+            view.firstUserMenu();
+            System.out.print("\n>> ");
+            try {
+                int choice = getInput().nextInt();
+                switch (choice) {
+                    case 1 -> checkCurrentUser();
+                    case 2 -> addUserToFile();
+                    case 3 -> { System.out.println(); mainMenu(); }
+                    default -> { System.err.println(outOfRange); }
+                }
+            } catch (InputMismatchException ime) {
+                System.err.println(invalidInput);
+                getInput().nextLine();
             }
-        } catch (InputMismatchException ime) {
-            System.err.println(invalidInput);
-            getInput().nextLine();
-            userMenu();
         }
     }
 
     public void adminMenu() throws IOException{ //main admin menu
-        System.out.print("\nWelcome Admin.");
-        view.firstAdminMenu();
-        System.out.print("\n>> ");
-        try {
-            int choice = input.nextInt();
-            switch (choice) {
-                case 1 -> { printUsersFromFile(); adminMenu(); }
-                case 2 -> { System.out.println("\nNothing"); }
-                case 3 -> { System.out.println(); return; }
-                default -> { System.err.println(outOfRange); }
+        
+        while(running){
+            System.out.print("\nWelcome Admin.");
+            view.firstAdminMenu();
+            System.out.print("\n>> ");
+            try {
+                int choice = getInput().nextInt();
+                switch (choice) {
+                    case 1 -> { printUsersFromFile(); adminMenu(); }
+                    case 2 -> { confirmEvents();  }
+                    case 3 -> { System.out.println(); mainMenu(); }
+                    default -> { System.err.println(outOfRange); }
+                }
+            } catch (InputMismatchException ime) {
+                System.err.println(invalidInput);
+                getInput().nextLine();
             }
-        } catch (InputMismatchException ime) {
-            System.err.println(invalidInput);
-            getInput().nextLine();
-            adminMenu();
         }
     }
 
@@ -109,20 +113,25 @@ public class Controller  {
      */
 
     public void subUserMenu(){ //sub user menu after current user option
-        System.out.print("\nWelcome " + getUser().getUserName());
-        view.secondUserMenu();
-        System.out.print("\n>> ");
-        try{
-            switch(input.nextInt()){
-                case 1 -> userEventsMenu();
-                case 2 -> {}
-                case 3 -> { System.out.println(); return; }
-                default -> { System.out.println(outOfRange); }
-        }
-        }catch(InputMismatchException iome){
-            System.err.println(invalidInput);
-            getInput().nextLine();
-            subUserMenu();
+        loadEvents();
+       
+        while(running){
+            System.out.print("\nWelcome " + getUser().getUserName());
+            view.secondUserMenu();
+            System.out.print("\n>> ");
+            try{
+                switch(getInput().nextInt()){
+                    case 1 -> userEventsMenu();
+                    case 2 -> {}
+                    case 3 -> { System.out.println(); mainMenu(); }
+                    default -> { System.out.println(outOfRange); }
+            }
+            }catch(InputMismatchException iome){
+                System.err.println(invalidInput);
+                getInput().nextLine();
+            }catch(IOException e){
+                System.err.println("Unable to execute process. Error occurred: " + e.getMessage());
+            }
         }
     }
 
@@ -130,22 +139,27 @@ public class Controller  {
         view.eventsMenu();
         System.out.print("\n>> ");
         try {
-            switch(input.nextInt()){
+            switch(getInput().nextInt()){
                 case 1 -> createEvent();
-                case 2 -> {}
-                case 3 -> { System.out.println(); return; }
+                case 2 -> { printUserEvents(); editEvent();}
+                case 3 -> { System.out.println(); subUserMenu(); }
                 default -> { System.out.println(outOfRange); }
             }
         } catch (InputMismatchException iome) {
             System.err.println(invalidInput);
-            input.nextLine();
+            getInput().nextLine();
             subUserMenu();
         }
+    }
+
+    public void editEvent(){
+        System.out.println("\nChoose which event you would like to edit.\n");
+        //userEventsMenu();
     }
     
     public void checkCurrentUser(){ //check if current user is in list of Users list
         System.out.print("Enter username (No spaces): ");
-        this.user.setUserName(input.next());
+        this.user.setUserName(getInput().next());
         if(model.isUserCreated(getUser().getUserName())){
             subUserMenu();
         }else{
@@ -155,12 +169,12 @@ public class Controller  {
     
     public void addUserToFile(){ //adds user to list of users file for admin to see 
         System.out.print("\nUsername (No spaces): ");
-        this.user.setUserName(input.next());
+        this.user.setUserName(getInput().next());
         if (model.isUserCreated(getUser().getUserName())) {
             System.out.println("Cannot create user. Username already exist.\n");
         }else{
-            saveData.userIntoDB(getUser().getUserName());
-            model.addUser(this.user);
+            saveData.userIntoDB(getUser().getUserName()); //save user to user db
+            model.addUser(getUser()); //update list of users for admin to see
             System.out.println(saveData.saveUser(getUser().getUserName())+"\n");
         }
     }
@@ -168,9 +182,9 @@ public class Controller  {
     public void loggingIn(){ //runs login method for admin
         view.loginForAdmin();
         System.out.print("Username: ");
-        String adminName = input.next();
+        String adminName = getInput().next();
         System.out.print("Password: ");
-        String adminPass = input.next();
+        String adminPass = getInput().next();
         if(adminLogin(adminName, adminPass)){
             try {
                 adminMenu(); 
@@ -214,13 +228,49 @@ public class Controller  {
         }
     }
 
-    public void loadEvents(){
+    public void loadEvents(){ //loads users events from databasae
+        for(Events events : this.saveData.getUserEvents(getUser().getUserName())){
+            model.addEvent(events);
+        }
+    }
 
+    public void loadEventsAdmin(){
+        for(Events events : this.saveData.getUnapprovedEvents()){
+            model.addEvent(events);
+        }
     }
 
     public void printUsersFromFile() throws IOException{ //print list of users from list
-        for(User auser : model.getUsers()){
+        for(User auser : getUsers()){
             System.out.println(auser.getUserName());
+        }
+    }
+
+    public void printUserEvents(){
+        int i = 1;
+        for(Events ev : getEvents()){
+            System.out.print(i + " Event Name: "+ev.getEventName() 
+            +" Event Description: " + ev.getEventDescription()
+            +" Event Date: "+ev.getEventDate()
+            +" Event Time: "+ev.getEventTime()
+            +" Event Location: "+ev.getEventLocation()
+            +" Status: "+ev.statusString());
+            i++;
+            System.out.println(); //new line
+        }
+    }
+
+    public void printUnapprovedEvents(){
+        int i = 0;
+        for(Events ev : getUnapprovedEvents()){
+            System.out.print(i+" Created by: "+ev.userName + " Event Name: "+ev.getEventName() 
+            +" Event Description: " + ev.getEventDescription()
+            +" Event Date: "+ev.getEventDate()
+            +" Event Time: "+ev.getEventTime()
+            +" Event Location: "+ev.getEventLocation()
+            +" Status: "+ev.statusString());
+            i++;
+            System.out.println(); //new line
         }
     }
 
@@ -235,7 +285,7 @@ public class Controller  {
     public void createEvent(){ //method for creating an event --> id, name, description, date, time, location
         try {
             System.out.print("\nEnter details below. ");
-            input.nextLine();
+            getInput().nextLine();
             String eventName = userString("\nEvent Name: ");
             String eventDescription = userString("Event Description: ");
             String eventDate = userString("Event Date (DD-MM-YYYY): ");
@@ -249,17 +299,38 @@ public class Controller  {
             this.event.setEventTime(eventTime);
             this.event.setEventLocation(eventLocation);
             
-            if(event.invalidFields()){
+            if(getEvent().invalidFields()){
                 System.out.println("Errors above. Try again.");
                 createEvent();
             }else{
                 //model.addEvent(this.event);
-                saveData.saveUserEvent(this.event, this.user.getUserName());
+                saveData.saveUserEvent(getEvent(), getUser().getUserName());
             }
         } catch (InputMismatchException ime) {
             System.err.println(invalidInput);
-            input.nextLine();
+            getInput().nextLine();
             subUserMenu();
         }
+    }
+
+    public void confirmEvents(){
+        System.out.println("Choose what event you would like to confirm.\n");
+        printUnapprovedEvents();
+        try{
+            System.out.print("\n>> ");
+            int evn = getInput().nextInt();
+            System.out.println(getUnapprovedEvents().get(evn));
+            /*
+            switch(getInput().nextInt()){
+
+            }*/
+        }catch(IndexOutOfBoundsException e){
+            System.err.println("Error processing input. Error occurred: "+e.getMessage());
+            getInput().nextLine(); //clears input
+        }catch(InputMismatchException e){
+            System.err.println(invalidInput);
+            getInput().nextLine();
+        }
+
     }
 }
