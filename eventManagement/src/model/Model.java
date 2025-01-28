@@ -3,18 +3,16 @@ package model;
 import java.util.*;
 
 public class Model {
-    private List<Tickets> tickets;
-    private Admin admins;
-    private List<User> users;
-    private List<Events> events;
-    private List<Events>unapprovedEvents;
+    private final List<Tickets> tickets;
+    private final Admin admins;
+    private final List<User> users;
+    private final List<Events> events;
 
     public Model(){
         this.admins = new Admin("", "");
         this.users = new ArrayList<>();
         this.tickets = new ArrayList<>();
         this.events = new ArrayList<>();
-        this.unapprovedEvents = new ArrayList<>();
     }
 
     //users and admin meths 
@@ -37,12 +35,12 @@ public class Model {
     }
 
     public void addUser(User newUser){ //set new user
-        users.add(newUser);
+        this.users.add(newUser);
     }
     
     public void addAdmin(String adminName, String adminPass){ //set new admin
-        admins.setAdminName(adminName);
-        admins.setAdminPass(adminPass);
+        this.admins.setAdminName(adminName);
+        this.admins.setAdminPass(adminPass);
     }
 
     //tickets and events meths
@@ -51,25 +49,19 @@ public class Model {
         return this.events;
     }
 
-    public List<Events>getUnapprovedEvents(){
-        for(Events e : getEvents()){
-            if(e.getEventStatus() == 0){
-                unapprovedEvents.add(e);
-            }
-        }
-        return unapprovedEvents;
-    }
-
     public List<Tickets>getTickets(){ //get list of tickets available in the events
         return this.tickets;
     }
 
     public void addTicket(Tickets ticket){ //add tickets
-        tickets.add(ticket);
+        this.tickets.add(ticket);
     }
 
     public void addEvent(Events event){ //add new events
-        events.add(event);
+        this.events.add(event);
     }
 
+    public void clearEvents(){ //clear events list to avoid duplication when printing
+        this.events.clear();
+    }
 }

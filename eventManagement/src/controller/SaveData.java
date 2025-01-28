@@ -79,12 +79,11 @@ public class SaveData implements SqlConnection {
         }
     }
 
-    public List<Events>getUnapprovedEvents(){
+    public List<Events>getAllEvents(){
         List<Events>unapprovedEvents = new ArrayList<>();
         try(Connection conn = conToDB()){
-            String query = "SELECT * FROM schema_events.eventsinfo WHERE status = ?";
+            String query = "SELECT * FROM schema_events.eventsinfo";
             try(PreparedStatement ps = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)){
-                ps.setString(1,"Unapproved");
                 ResultSet set = ps.executeQuery();
                 while(set.next()){
                     Events ev = new Events(set.getString("eventname"),

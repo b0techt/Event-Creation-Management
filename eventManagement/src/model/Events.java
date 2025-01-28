@@ -11,7 +11,7 @@ public class Events {
     public String userName;
     private int status;
 
-    public Events(String eventNameString, String eventLocationString, String eventDescString, String eventDateString, String eventTimeString, User user){
+    public Events(String eventNameString, String eventDescString, String eventDateString, String eventTimeString, String eventLocationString, User user){
         this.eventName = eventNameString;
         this.eventLocation = eventLocationString;
         this.eventDescription = eventDescString;
@@ -48,7 +48,7 @@ public class Events {
     public String statusString(){
         if(this.status == 1){
             return "Approved";
-        }else if(this.status == -1){
+        }else if(this.status == 2){
             return "Rejected";
         }
         return "Unapproved";
@@ -82,7 +82,7 @@ public class Events {
         }
     }
 
-    void setEventStatus(int newStatus){ //set new status only for admin to access
+    public void setEventStatus(int newStatus){ //set new status only for admin to access
         this.status = newStatus;
     }
 

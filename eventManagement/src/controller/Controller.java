@@ -42,7 +42,6 @@ public class Controller  {
 
     //start app
     public void start() throws IOException{
-        loadEventsAdmin();
         loadUsers(); //store user list to from file
         mainMenu(); 
     }
@@ -218,10 +217,6 @@ public class Controller  {
         return this.model.getEvents();
     }
 
-    public List<Events>getUnapprovedEvents(){ //gets unapproved events for the admin to approve
-        return this.model.getUnapprovedEvents();
-    }
-
     public void loadUsers()throws IOException{ //gets list of users from the file 
         for(User users : this.saveData.listOfUserNames()){
             model.addUser(users);
@@ -229,13 +224,15 @@ public class Controller  {
     }
 
     public void loadEvents(){ //loads users events from databasae
+        getEvents().clear();
         for(Events events : this.saveData.getUserEvents(getUser().getUserName())){
             model.addEvent(events);
         }
     }
 
     public void loadEventsAdmin(){
-        for(Events events : this.saveData.getUnapprovedEvents()){
+        getEvents().clear();
+        for(Events events : this.saveData.getAllEvents()){
             model.addEvent(events);
         }
     }
@@ -247,7 +244,7 @@ public class Controller  {
     }
 
     public void printUserEvents(){
-        int i = 1;
+        int i = 0;
         for(Events ev : getEvents()){
             System.out.print(i + " Event Name: "+ev.getEventName() 
             +" Event Description: " + ev.getEventDescription()
@@ -258,11 +255,12 @@ public class Controller  {
             i++;
             System.out.println(); //new line
         }
+
     }
 
     public void printUnapprovedEvents(){
         int i = 0;
-        for(Events ev : getUnapprovedEvents()){
+        for(Events ev : getEvents()){
             System.out.print(i+" Created by: "+ev.userName + " Event Name: "+ev.getEventName() 
             +" Event Description: " + ev.getEventDescription()
             +" Event Date: "+ev.getEventDate()
@@ -314,12 +312,13 @@ public class Controller  {
     }
 
     public void confirmEvents(){
+        loadEventsAdmin();
         System.out.println("Choose what event you would like to confirm.\n");
         printUnapprovedEvents();
         try{
             System.out.print("\n>> ");
-            int evn = getInput().nextInt();
-            System.out.println(getUnapprovedEvents().get(evn));
+            //int evn = getInput().nextInt();
+            
             /*
             switch(getInput().nextInt()){
 
