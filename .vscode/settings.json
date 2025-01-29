@@ -5,7 +5,7 @@
         {
             "scope": "constant.character.escape.java",
             "settings": {
-                "foreground": "#FF5733"  // Change this to your preferred colour
+                "foreground": "#FF5733" 
             }
         }
     ]
