@@ -27,14 +27,6 @@ public class SaveData implements SqlConnection {
         }
     }
 
-    public void getCurrentUserForEdits(String userName)throws FileNotFoundException, IOException{ //get current user if not create new user
-        for(User user : users.getUsers()){
-            if (user.getUserName().equals(userName)) {
-                
-            }
-        }
-    }
-
     public String saveUser(String userName){
         try {
             append = false;
@@ -52,6 +44,17 @@ public class SaveData implements SqlConnection {
             System.err.println("Cannot save user. Will attempt again on application exit.\n");
         }
         return "Username saved.";
+    } 
+    
+    public List<User>listOfUserNames()throws IOException{ //helps load users for the admin to see
+        List<User>usernames = new ArrayList<>();
+        try(BufferedReader br = new BufferedReader(new FileReader(ul))){
+            String line;
+            while((line = br.readLine()) != null){
+                usernames.add(new User(line));
+            }
+            return usernames;
+        }
     }
 
     @Override
@@ -66,69 +69,6 @@ public class SaveData implements SqlConnection {
         }catch(SQLException | NullPointerException e){
             System.err.println("Could not save User account. " + e.getMessage());
         }
-    }
-
-    public List<User>listOfUserNames()throws IOException{ //helps load users for the admin to see
-        List<User>usernames = new ArrayList<>();
-        try(BufferedReader br = new BufferedReader(new FileReader(ul))){
-            String line;
-            while((line = br.readLine()) != null){
-                usernames.add(new User(line));
-            }
-            return usernames;
-        }
-    }
-
-    public List<Events>getAllEvents(){
-        List<Events>unapprovedEvents = new ArrayList<>();
-        try(Connection conn = conToDB()){
-            String query = "SELECT * FROM schema_events.eventsinfo";
-            try(PreparedStatement ps = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)){
-                ResultSet set = ps.executeQuery();
-                while(set.next()){
-                    Events ev = new Events(set.getString("eventname"),
-                    set.getString("eventdesc"),
-                    set.getString("eventdate"),
-                    set.getString("eventtime"),
-                    set.getString("eventlocation"), new User(set.getString("username")));
-
-                    unapprovedEvents.add(ev);
-                }
-            }
-        }catch(SQLException e ){
-            System.err.println("Could not connec to database. Error occurred: "+e.getMessage());
-        }
-        return unapprovedEvents;
-    }
-
-    public List<Events>getUserEvents(String userName){
-        List<Events>userEvents = new ArrayList<>();
-        try(Connection connect = conToDB()){
-            String query = "SELECT * FROM schema_events.eventsinfo WHERE username=?";
-            try(PreparedStatement stmt = connect.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)){
-                stmt.setString(1, userName);
-                ResultSet set = stmt.executeQuery();
-                while(set.next()){
-                    Events ev = new Events(set.getString("eventname"),
-                    set.getString("eventdesc"),
-                    set.getString("eventdate"),
-                    set.getString("eventtime"),
-                    set.getString("eventlocation"), new User(set.getString("username")));
-
-                    switch (set.getString("status")) {
-                        case "Unapproved" -> ev.setEventStatus(0);
-                        case "Approved" -> ev.setEventStatus(1);
-                        case "Rejected" -> ev.setEventStatus(-1);
-                        default -> {}
-                    }
-                    
-                    userEvents.add(ev);
-                }
-            }
-        }catch(SQLException e){
-            System.err.println("Could not fetch data. Error occurred: "+e.getMessage());
-        }
-        return userEvents;
     }
 
     @Override
@@ -155,16 +95,76 @@ public class SaveData implements SqlConnection {
         }
     }
 
-    @Override
-    public void adminApprove(Events event, String userName, int status){ //admin control to either approve or reject event.
+    public List<Events>getAllEvents(){
+        List<Events>unapprovedEvents = new ArrayList<>();
         try(Connection conn = conToDB()){
-            String query = "UPDATE schema_events.eventsinfo SET status = ? WHERE username = ?";
+            String query = "SELECT * FROM schema_events.eventsinfo";
+            try(PreparedStatement ps = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)){
+                ResultSet set = ps.executeQuery();
+                while(set.next()){
+                    Events ev = new Events(set.getString("eventname"),
+                    set.getString("eventdesc"),
+                    set.getString("eventdate"),
+                    set.getString("eventtime"),
+                    set.getString("eventlocation"), new User(set.getString("username")));
+
+                    switch (set.getString("status")) {
+                        case "Unapproved" -> ev.setEventStatus(0);
+                        case "Approved" -> ev.setEventStatus(1);
+                        case "Rejected" -> ev.setEventStatus(2);
+                        default -> {}
+                    }
+
+                    unapprovedEvents.add(ev);
+                }
+            }
+        }catch(SQLException e ){
+            System.err.println("Could not connec to database. Error occurred: "+e.getMessage());
+        }
+        return unapprovedEvents;
+    }
+
+    public List<Events>getUserEvents(String userName){
+        List<Events>userEvents = new ArrayList<>();
+        try(Connection connect = conToDB()){
+            String query = "SELECT * FROM schema_events.eventsinfo WHERE username = ?";
+            try(PreparedStatement stmt = connect.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)){
+                stmt.setString(1, userName);
+                ResultSet set = stmt.executeQuery();
+                while(set.next()){
+                    Events ev = new Events(set.getString("eventname"),
+                    set.getString("eventdesc"),
+                    set.getString("eventdate"),
+                    set.getString("eventtime"),
+                    set.getString("eventlocation"), new User(set.getString("username")));
+
+                    switch (set.getString("status")) {
+                        case "Unapproved" -> ev.setEventStatus(0);
+                        case "Approved" -> ev.setEventStatus(1);
+                        case "Rejected" -> ev.setEventStatus(2);
+                        default -> {}
+                    }
+                    
+                    userEvents.add(ev);
+                }
+            }
+        }catch(SQLException e){
+            System.err.println("Could not fetch data. Error occurred: "+e.getMessage());
+        }
+        return userEvents;
+    }
+
+    @Override
+    public void adminApprove(Events event, String userName, String coninfo, int status){ //admin control to either approve or reject event.
+        try(Connection conn = conToDB()){
+            String query = "UPDATE schema_events.eventsinfo SET status = ?, statusinfo = ? WHERE username = ?";
             try(PreparedStatement ps = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)){
                 switch(status){
                     case 1 -> ps.setString(1,"Approved");
                     case 2 -> ps.setString(1,"Rejected");
                 }
-                ps.setString(2, userName);
+                ps.setString(2, coninfo);
+                ps.setString(3, userName);
                 ps.executeUpdate();
 
                 event.setEventStatus(status);
@@ -172,6 +172,33 @@ public class SaveData implements SqlConnection {
             }
         }catch(SQLException e){
             System.err.println("Was not able to update data. Error occurred: "+e.getMessage());
+        }
+    }
+
+    @Override
+    public String adminReason(String eventName, String userName){
+        String adminInfo = "";
+        try(Connection conn = conToDB()){
+            String query = "SELECT statusinfo FROM schema_events.eventsinfo WHERE username = ? AND eventname = ?";
+            try(PreparedStatement ps = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)){
+                ps.setString(1, userName);
+                ps.setString(2, eventName);
+                ResultSet set = ps.executeQuery();
+                while(set.next()){
+                    adminInfo = set.getString("statusinfo");
+                }
+            }
+        }catch(SQLException e){
+            System.err.println("Information could not be retrieved. Error occurred: "+e.getMessage());
+        }
+        return adminInfo;
+    } 
+    
+    public void getCurrentUserForEdits(String userName)throws FileNotFoundException, IOException{ //get current user if not create new user
+        for(User user : users.getUsers()){
+            if (user.getUserName().equals(userName)) {
+                
+            }
         }
     }
 }

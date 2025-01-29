@@ -1,3 +1,14 @@
 {
-    "java.format.settings.url": "eclipse-formatter.xml"
+    "java.format.settings.url": "eclipse-formatter.xml",
+    "editor.tokenColorCustomizations": {
+    "textMateRules": [
+        {
+            "scope": "constant.character.escape.java",
+            "settings": {
+                "foreground": "#FF5733"  // Change this to your preferred colour
+            }
+        }
+    ]
+}
+
 }

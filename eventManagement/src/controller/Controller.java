@@ -140,7 +140,7 @@ public class Controller  {
         try {
             switch(getInput().nextInt()){
                 case 1 -> createEvent();
-                case 2 -> { printUserEvents(); editEvent();}
+                case 2 -> editEvent();
                 case 3 -> { System.out.println(); subUserMenu(); }
                 default -> { System.out.println(outOfRange); }
             }
@@ -151,9 +151,29 @@ public class Controller  {
         }
     }
 
-    public void editEvent(){
+    public void editEvent(){ //method to see events and edit if needed.
         System.out.println("\nChoose which event you would like to edit.\n");
-        //userEventsMenu();
+        printUserEvents();
+        int editOps = userInt(">> ");
+        System.out.println("\nChosen: "+getEvents().get(editOps).getEventName()+" event. Status: "+getEvents().get(editOps).statusString());
+        System.out.println("1: Edit details."); //add to view instead same with line 341
+        System.out.println("2: See Admin Feedback.");
+        System.out.println("3: Cancel.");
+        int nextChoice = userInt(">> ");
+        try {
+            switch (nextChoice) {
+                case 1 -> { getInput().nextLine(); }
+                case 2 -> { getInput().nextLine(); String feedback = this.saveData.adminReason(getEvents().get(editOps).getEventName(), getUser().getUserName()); 
+                    System.out.println("Admin feedback: "+feedback); }
+                default -> {return; }
+            }
+        } catch (IndexOutOfBoundsException e) {
+            System.err.println("Error processing input. Error occurred: "+e.getMessage());
+            getInput().nextLine(); //clears input
+        }catch(InputMismatchException e){
+            System.err.println(invalidInput);
+            getInput().nextLine();
+        }
     }
     
     public void checkCurrentUser(){ //check if current user is in list of Users list
@@ -230,7 +250,7 @@ public class Controller  {
         }
     }
 
-    public void loadEventsAdmin(){
+    public void loadEventsAdmin(){ //loads all events from eventsinfo table
         getEvents().clear();
         for(Events events : this.saveData.getAllEvents()){
             model.addEvent(events);
@@ -243,22 +263,22 @@ public class Controller  {
         }
     }
 
-    public void printUserEvents(){
+    public void printUserEvents(){ //prints events linked to user name
         int i = 0;
         for(Events ev : getEvents()){
             System.out.print(i + " Event Name: "+ev.getEventName() 
-            +" Event Description: " + ev.getEventDescription()
-            +" Event Date: "+ev.getEventDate()
-            +" Event Time: "+ev.getEventTime()
-            +" Event Location: "+ev.getEventLocation()
-            +" Status: "+ev.statusString());
+            +", Event Description: " + ev.getEventDescription()
+            +", Event Date: "+ev.getEventDate()
+            +", Event Time: "+ev.getEventTime()
+            +", Event Location: "+ev.getEventLocation()
+            +", Status: "+ev.statusString());
             i++;
             System.out.println(); //new line
         }
 
     }
 
-    public void printUnapprovedEvents(){
+    public void printEvents(){ //ignore the method name, prints all events
         int i = 0;
         for(Events ev : getEvents()){
             System.out.print(i+" Created by: "+ev.userName + " Event Name: "+ev.getEventName() 
@@ -314,15 +334,21 @@ public class Controller  {
     public void confirmEvents(){
         loadEventsAdmin();
         System.out.println("Choose what event you would like to confirm.\n");
-        printUnapprovedEvents();
+        printEvents();
         try{
-            System.out.print("\n>> ");
-            //int evn = getInput().nextInt();
-            
-            /*
-            switch(getInput().nextInt()){
+            int evn = userInt(">> ");
+            System.out.println("\nYou have chosen "+getEvents().get(evn).getEventName()+", Status: "+getEvents().get(evn).statusString()
+            +", Created by: "+getEvents().get(evn).userName);
+            System.out.println("1: Approve.");
+            System.out.println("2: Reject.");
+            System.out.println("3: Cancel.");
+            int update = userInt(">> ");
 
-            }*/
+            switch(update){ /* getInput().nextLine() clears the nextInt() input */
+                case 1 -> { getInput().nextLine(); String stinfo = userString("\nReason for descision: "); saveData.adminApprove(getEvents().get(evn), getEvents().get(evn).userName, stinfo, update); }
+                case 2 -> { getInput().nextLine(); String stinfo = userString("\nReason for descision:  "); saveData.adminApprove(getEvents().get(evn), getEvents().get(evn).userName, stinfo, update); }
+                default -> { return; }
+            }
         }catch(IndexOutOfBoundsException e){
             System.err.println("Error processing input. Error occurred: "+e.getMessage());
             getInput().nextLine(); //clears input
@@ -330,6 +356,5 @@ public class Controller  {
             System.err.println(invalidInput);
             getInput().nextLine();
         }
-
     }
 }
