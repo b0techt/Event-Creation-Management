@@ -15,6 +15,8 @@ public class Driver {
 
 		//controller
 		Controller c = new Controller(m,v);
-		c.start();
+		v.setController(c);
+
+		c.start(); 
 	}
 }
