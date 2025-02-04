@@ -7,5 +7,6 @@ public interface SqlConnection {
     public void userIntoDB(String userName);
     public void saveUserEvent(Events event, String userName);
     public void adminApprove(Events event, String userName, String coninfo, int status);
-    public String adminReason(String eventName, String userName);
+    public void updateEvent(Events event, String eventChange, String userName, int choice);
+    public String adminFeedback(String eventName, String userName);
 }

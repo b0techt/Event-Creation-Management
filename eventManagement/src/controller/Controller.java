@@ -6,36 +6,35 @@ import view.View;
 
 public class Controller  {
     private final Scanner input = new Scanner(System.in);
-    private Model model;
-    private View view;
+    private final Model model;
+    private final View view;
     private final SaveData saveData;
-    private User user;
-    private Admin admin;
+    private final User user;
+    private final Admin admin;
     private Events event;
-    private Tickets ticket;
-    private boolean running = true;
+    //private Tickets ticket;
     private final String invalidInput = "Invalid input. Try again.\n";
     private final String outOfRange = "Option out of range. Try again.\n";
-
+    
     public Controller(Model m, View v){
         this.model = m;
         this.view = v;
         this.saveData = new SaveData();
         this.user = new User("");
         this.admin = new Admin();
-        this.event = new Events("", "", "", "", "", user);
+        this.event = null;
     }
 
     public Scanner getInput(){
         return this.input;
     }
 
-    private String userString(String prompt){
+    public String userString(String prompt){
         System.out.print(prompt);
         return this.input.nextLine();
     }
 
-    private int userInt(String prompt){
+    public int userInt(String prompt){
         System.out.print(prompt);
         return this.input.nextInt();
     }
@@ -43,182 +42,7 @@ public class Controller  {
     //start app
     public void start() throws IOException{
         loadUsers(); //store user list to from file
-        mainMenu(); 
-    }
-
-    //menu methods
-    public void mainMenu() throws IOException{
-         while(running){
-            view.printStart();
-            System.out.print("\n>> ");
-            try {
-                int choice = getInput().nextInt();
-                switch (choice) {
-                    case 1 -> userMenu(); 
-                    case 2 -> loggingIn();
-                    case 3 -> { running = false; getInput().close(); view.closingMessage(); } //exit
-                    default -> { System.err.println(outOfRange); }
-                }
-            } catch(InputMismatchException ime) {
-                System.err.println(invalidInput);
-                getInput().nextLine();
-            }
-            
-        }
-    }
-
-    public void userMenu() throws IOException{ //main user menu
-        while(running){
-            view.firstUserMenu();
-            System.out.print("\n>> ");
-            try {
-                int choice = getInput().nextInt();
-                switch (choice) {
-                    case 1 -> checkCurrentUser();
-                    case 2 -> addUserToFile();
-                    case 3 -> { System.out.println(); mainMenu(); }
-                    default -> { System.err.println(outOfRange); }
-                }
-            } catch (InputMismatchException ime) {
-                System.err.println(invalidInput);
-                getInput().nextLine();
-            }
-        }
-    }
-
-    public void adminMenu() throws IOException{ //main admin menu
-        
-        while(running){
-            System.out.print("\nWelcome Admin.");
-            view.firstAdminMenu();
-            System.out.print("\n>> ");
-            try {
-                int choice = getInput().nextInt();
-                switch (choice) {
-                    case 1 -> { printUsersFromFile(); adminMenu(); }
-                    case 2 -> { confirmEvents();  }
-                    case 3 -> { System.out.println(); mainMenu(); }
-                    default -> { System.err.println(outOfRange); }
-                }
-            } catch (InputMismatchException ime) {
-                System.err.println(invalidInput);
-                getInput().nextLine();
-            }
-        }
-    }
-
-    /*
-     * in events menu --> option 2: edit events --> 1. See Events 2. Back to Events Menu
-     */
-
-    public void subUserMenu(){ //sub user menu after current user option
-        loadEvents();
-       
-        while(running){
-            System.out.print("\nWelcome " + getUser().getUserName());
-            view.secondUserMenu();
-            System.out.print("\n>> ");
-            try{
-                switch(getInput().nextInt()){
-                    case 1 -> userEventsMenu();
-                    case 2 -> {}
-                    case 3 -> { System.out.println(); mainMenu(); }
-                    default -> { System.out.println(outOfRange); }
-            }
-            }catch(InputMismatchException iome){
-                System.err.println(invalidInput);
-                getInput().nextLine();
-            }catch(IOException e){
-                System.err.println("Unable to execute process. Error occurred: " + e.getMessage());
-            }
-        }
-    }
-
-    public void userEventsMenu(){
-        view.eventsMenu();
-        System.out.print("\n>> ");
-        try {
-            switch(getInput().nextInt()){
-                case 1 -> createEvent();
-                case 2 -> editEvent();
-                case 3 -> { System.out.println(); subUserMenu(); }
-                default -> { System.out.println(outOfRange); }
-            }
-        } catch (InputMismatchException iome) {
-            System.err.println(invalidInput);
-            getInput().nextLine();
-            subUserMenu();
-        }
-    }
-
-    public void editEvent(){ //method to see events and edit if needed.
-        System.out.println("\nChoose which event you would like to edit.\n");
-        printUserEvents();
-        int editOps = userInt(">> ");
-        System.out.println("\nChosen: "+getEvents().get(editOps).getEventName()+" event. Status: "+getEvents().get(editOps).statusString());
-        System.out.println("1: Edit details."); //add to view instead same with line 341
-        System.out.println("2: See Admin Feedback.");
-        System.out.println("3: Cancel.");
-        int nextChoice = userInt(">> ");
-        try {
-            switch (nextChoice) {
-                case 1 -> { getInput().nextLine(); }
-                case 2 -> { getInput().nextLine(); String feedback = this.saveData.adminReason(getEvents().get(editOps).getEventName(), getUser().getUserName()); 
-                    System.out.println("Admin feedback: "+feedback); }
-                default -> {return; }
-            }
-        } catch (IndexOutOfBoundsException e) {
-            System.err.println("Error processing input. Error occurred: "+e.getMessage());
-            getInput().nextLine(); //clears input
-        }catch(InputMismatchException e){
-            System.err.println(invalidInput);
-            getInput().nextLine();
-        }
-    }
-    
-    public void checkCurrentUser(){ //check if current user is in list of Users list
-        System.out.print("Enter username (No spaces): ");
-        this.user.setUserName(getInput().next());
-        if(model.isUserCreated(getUser().getUserName())){
-            subUserMenu();
-        }else{
-            System.out.println("User does not exist. Create a new user.\n");
-        }
-    }
-    
-    public void addUserToFile(){ //adds user to list of users file for admin to see 
-        System.out.print("\nUsername (No spaces): ");
-        this.user.setUserName(getInput().next());
-        if (model.isUserCreated(getUser().getUserName())) {
-            System.out.println("Cannot create user. Username already exist.\n");
-        }else{
-            saveData.userIntoDB(getUser().getUserName()); //save user to user db
-            model.addUser(getUser()); //update list of users for admin to see
-            System.out.println(saveData.saveUser(getUser().getUserName())+"\n");
-        }
-    }
-
-    public void loggingIn(){ //runs login method for admin
-        view.loginForAdmin();
-        System.out.print("Username: ");
-        String adminName = getInput().next();
-        System.out.print("Password: ");
-        String adminPass = getInput().next();
-        if(adminLogin(adminName, adminPass)){
-            try {
-                adminMenu(); 
-            } catch (IOException e) {
-                System.err.println("System error.");
-            }
-        }else{
-            System.out.println("Incorrect login. Redirecting to Main Menu.\n");
-            try {
-                mainMenu();
-            } catch (IOException ioe) {
-                System.err.println("System error.");
-                System.exit(0);
-            }
-        }
+        view.mainMenu(); 
     }
 
     public void setUserName(String userName){ //sets current user 
@@ -257,52 +81,82 @@ public class Controller  {
         }
     }
 
-    public void printUsersFromFile() throws IOException{ //print list of users from list
-        for(User auser : getUsers()){
-            System.out.println(auser.getUserName());
-        }
-    }
-
-    public void printUserEvents(){ //prints events linked to user name
-        int i = 0;
-        for(Events ev : getEvents()){
-            System.out.print(i + " Event Name: "+ev.getEventName() 
-            +", Event Description: " + ev.getEventDescription()
-            +", Event Date: "+ev.getEventDate()
-            +", Event Time: "+ev.getEventTime()
-            +", Event Location: "+ev.getEventLocation()
-            +", Status: "+ev.statusString());
-            i++;
-            System.out.println(); //new line
-        }
-
-    }
-
-    public void printEvents(){ //ignore the method name, prints all events
-        int i = 0;
-        for(Events ev : getEvents()){
-            System.out.print(i+" Created by: "+ev.userName + " Event Name: "+ev.getEventName() 
-            +" Event Description: " + ev.getEventDescription()
-            +" Event Date: "+ev.getEventDate()
-            +" Event Time: "+ev.getEventTime()
-            +" Event Location: "+ev.getEventLocation()
-            +" Status: "+ev.statusString());
-            i++;
-            System.out.println(); //new line
-        }
-    }
-
     public boolean adminLogin(String name, String password){ //login for admin option
         return this.admin.login(name, password);
+    }
+
+    public void setCurrEvent(int n){
+        this.event = getEvents().get(n);
     }
 
     public Events getEvent(){ //gets current event
         return this.event;
     }
+    
+    public boolean checkCurrentUser(){ //check if current user is in list of Users list
+        getInput().nextLine(); //clear input
+        String userName = userString("Enter username (No spaces): ");
+        this.user.setUserName(userName);
+        //System.out.println("User does not exist. Create a new user.\n");
+        return model.isUserCreated(getUser().getUserName());
+    }
+    
+    public void addUserToFile(){ //adds user to list of users file for admin to see 
+        String userName = userString("\nUsername (No spaces): ");
+        this.user.setUserName(userName);
+
+        if (model.isUserCreated(getUser().getUserName())) {
+            System.out.println("Cannot create user. Username already exist.\n");
+        }else{
+            saveData.userIntoDB(getUser().getUserName()); //save user to user db
+            model.addUser(getUser()); //update list of users for admin to see
+            System.out.println(saveData.saveUser(getUser().getUserName())+"\n");
+        }
+    }
+
+    public boolean loggingIn(){ //runs login method for admin
+        getInput().nextLine(); //clear input from nextInt() 
+        String adminName = userString("Username: ");
+        String adminPass = userString("Password: ");
+        return checkAdminLogin(adminName, adminPass);
+    }
+
+    private boolean checkAdminLogin(String name, String password){ //admin view updated based on input
+        if(adminLogin(name, password)){
+            this.user.setUserName("");
+            return true;
+        }
+        return false;
+    }
+
+    public void eventSeeOrEdit(Events chosenEvent){ //sends data to view for event display
+        editChoice(chosenEvent);
+    }
+    
+    public void seeEvents(){ //method to see events and edit if needed.
+        int editOps = userInt(">> ");
+
+        if(editOps < 0 || editOps >= getEvents().size()){
+            System.err.println(outOfRange);
+        }
+
+        setCurrEvent(editOps);
+    }
+
+    private void editChoice(Events selectedEvent){ //method for option 2 on events menu, updates the view
+        try {
+            String feedback = this.saveData.adminFeedback(selectedEvent.getEventName(), getUser().getUserName()); 
+            view.displayAdminFeedback(feedback); //get rid of view call
+                
+        }catch(InputMismatchException e){
+            System.err.println(invalidInput);
+            System.err.println("Error processing input. Error occurred: "+e.getMessage());
+            getInput().nextLine(); //clears input
+        }
+    }
 
     public void createEvent(){ //method for creating an event --> id, name, description, date, time, location
         try {
-            System.out.print("\nEnter details below. ");
             getInput().nextLine();
             String eventName = userString("\nEvent Name: ");
             String eventDescription = userString("Event Description: ");
@@ -321,32 +175,43 @@ public class Controller  {
                 System.out.println("Errors above. Try again.");
                 createEvent();
             }else{
-                //model.addEvent(this.event);
                 saveData.saveUserEvent(getEvent(), getUser().getUserName());
             }
         } catch (InputMismatchException ime) {
             System.err.println(invalidInput);
             getInput().nextLine();
-            subUserMenu();
         }
     }
 
-    public void confirmEvents(){
-        loadEventsAdmin();
-        System.out.println("Choose what event you would like to confirm.\n");
-        printEvents();
+    public void editEvent(Events event){ //edit chosen user event
+        //go over this when I get home
+        int choice = userInt("\n>> ");
+        switch(choice){
+            case 1 -> { getInput().nextLine(); String newDetail = userString("\nNew Event Name: "); this.saveData.updateEvent(event, event.userName, newDetail, choice); event.setEvent(newDetail);}
+            case 2 -> { getInput().nextLine(); String newDetail = userString("\nNew Event Description: "); this.saveData.updateEvent(event, event.userName, newDetail, choice); event.setEventDescription(newDetail);}
+            case 3 -> { getInput().nextLine(); String newDetail = userString("\nNew Event Date: "); this.saveData.updateEvent(event, event.userName, newDetail, choice); event.setEventDate(newDetail);}
+            case 4 -> { getInput().nextLine(); String newDetail = userString("\nNew Event Time: "); this.saveData.updateEvent(event, event.userName, newDetail, choice); event.setEventTime(newDetail);}
+            case 5 -> { getInput().nextLine(); String newDetail = userString("\nNew Event Location: "); this.saveData.updateEvent(event, event.userName, newDetail, choice); event.setEventLocation(newDetail);}
+            default -> { return; }
+        }
+    }
+
+    public void confirmEvents(){ //admin control to confirm events
+        int evn = userInt(">> ");
+        if(evn < 0 || evn >= getEvents().size()){
+            System.err.println(outOfRange);
+        }
+
+        setCurrEvent(evn);
+        adminConfirmChoice(this.event);
+    }
+
+    private void adminConfirmChoice(Events selectedEvent){ //confirm choice from admin
         try{
-            int evn = userInt(">> ");
-            System.out.println("\nYou have chosen "+getEvents().get(evn).getEventName()+", Status: "+getEvents().get(evn).statusString()
-            +", Created by: "+getEvents().get(evn).userName);
-            System.out.println("1: Approve.");
-            System.out.println("2: Reject.");
-            System.out.println("3: Cancel.");
-            int update = userInt(">> ");
+            int update = view.getAdminConfirmChoice(event);
 
             switch(update){ /* getInput().nextLine() clears the nextInt() input */
-                case 1 -> { getInput().nextLine(); String stinfo = userString("\nReason for descision: "); saveData.adminApprove(getEvents().get(evn), getEvents().get(evn).userName, stinfo, update); }
-                case 2 -> { getInput().nextLine(); String stinfo = userString("\nReason for descision:  "); saveData.adminApprove(getEvents().get(evn), getEvents().get(evn).userName, stinfo, update); }
+                case 1, 2 -> { getInput().nextLine(); String stinfo = userString("\nReason for descision: "); saveData.adminApprove(selectedEvent, selectedEvent.userName, stinfo, update); }
                 default -> { return; }
             }
         }catch(IndexOutOfBoundsException e){

@@ -4,11 +4,9 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import model.Events;
-import model.Model;
 import model.User;
 
 public class SaveData implements SqlConnection {
-    private Model users;
     private final String ul = "eventManagement\\db\\listOfUsers.txt";
     private final ConfigSQL sql = new ConfigSQL();
     private BufferedWriter bw;
@@ -157,7 +155,7 @@ public class SaveData implements SqlConnection {
     @Override
     public void adminApprove(Events event, String userName, String coninfo, int status){ //admin control to either approve or reject event.
         try(Connection conn = conToDB()){
-            String query = "UPDATE schema_events.eventsinfo SET status = ?, statusinfo = ? WHERE username = ?";
+            String query = "UPDATE schema_events.eventsinfo SET status = ?, statusinfo = ? WHERE username = ? AND eventname = ?";
             try(PreparedStatement ps = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)){
                 switch(status){
                     case 1 -> ps.setString(1,"Approved");
@@ -165,6 +163,7 @@ public class SaveData implements SqlConnection {
                 }
                 ps.setString(2, coninfo);
                 ps.setString(3, userName);
+                ps.setString(4, event.getEventName());
                 ps.executeUpdate();
 
                 event.setEventStatus(status);
@@ -176,7 +175,7 @@ public class SaveData implements SqlConnection {
     }
 
     @Override
-    public String adminReason(String eventName, String userName){
+    public String adminFeedback(String eventName, String userName){ //gets admin feedback from the database
         String adminInfo = "";
         try(Connection conn = conToDB()){
             String query = "SELECT statusinfo FROM schema_events.eventsinfo WHERE username = ? AND eventname = ?";
@@ -194,11 +193,32 @@ public class SaveData implements SqlConnection {
         return adminInfo;
     } 
     
-    public void getCurrentUserForEdits(String userName)throws FileNotFoundException, IOException{ //get current user if not create new user
-        for(User user : users.getUsers()){
-            if (user.getUserName().equals(userName)) {
-                
+    @Override
+    public void updateEvent(Events event, String userName, String eventChange, int choice){ //update user event using switch statement
+        try(Connection conn = conToDB()){
+            switch (choice) {
+                case 1 -> { String query = "UPDATE schema_events.eventsinfo SET status=?, eventname=? WHERE username=? AND eventname=?"; prepareStatement(conn, query, eventChange, userName, event.getEventName());}
+                case 2 -> { String query = "UPDATE schema_events.eventsinfo SET status=?, eventdesc=? WHERE username=? AND eventname=?"; prepareStatement(conn, query, eventChange, userName, event.getEventName());}
+                case 3 -> { String query = "UPDATE schema_events.eventsinfo SET status=?, eventdate=? WHERE username=? AND eventname=?"; prepareStatement(conn, query, eventChange, userName, event.getEventName());}
+                case 4 -> { String query = "UPDATE schema_events.eventsinfo SET status=?, eventtime=? WHERE username=? AND eventname=?"; prepareStatement(conn, query, eventChange, userName, event.getEventName());}
+                case 5 -> { String query = "UPDATE schema_events.eventsinfo SET status=?, eventlocation=? WHERE username=? AND eventname=?"; prepareStatement(conn, query, eventChange, userName, event.getEventName());}
             }
+            //event.setEventStatus(0);
+        }catch(SQLException e){
+            System.err.println("Was not able to update data. Error occurred: "+e.getMessage());
+        }
+    }
+
+    private void prepareStatement(Connection connect, String query, String eventCol, String userName, String evName){ //statement method to reduce multiple methods
+        try(PreparedStatement ps = connect.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)){ //update set st? evd? where un?
+            ps.setString(1, "Unapproved");
+            ps.setString(2, eventCol);
+            ps.setString(3, userName);
+            ps.setString(4, evName);
+            ps.executeUpdate();
+            System.out.println("Event details has been updated.");
+        }catch(SQLException e){
+            System.err.println("Was not able to update data. Error occurred: "+e.getMessage());
         }
     }
 }
