@@ -68,6 +68,7 @@ public class Events {
 
     public void setEventDate(String newEventDate){  //set new Event date upon new creation
         if(!newEventDate.matches("\\d{2}-\\d{2}-\\d{4}")){
+            this.eventDate = "";
             System.out.println("Please match the Date format in brackets.\n");
         }else{
             this.eventDate = newEventDate;
@@ -76,6 +77,7 @@ public class Events {
 
     public void setEventTime(String newEventTime){  //set new Event time upon new creation
         if(!newEventTime.contains(":")){
+            this.eventTime = "";
             System.out.println("Please match the Time format in brackets.\n");
         }else{
             this.eventTime = newEventTime;

@@ -16,7 +16,7 @@ public class View {
     }
 
     public void printStart(){ //start message
-        System.out.println("Hello, User and Welcome to Tailored Events.");
+        System.out.println("Hello, User and Welcome to Tailored Events. Use the numbers as directions.");
 		System.out.print("1: User \n2: Admin \n3: Exit");
     }
 
@@ -48,7 +48,7 @@ public class View {
     }
 
     private void ticketsMenu(){ //first tickets menu
-        System.out.print("\n1: View Available Ticket Types\n2: Edit Tickets\n3: Back to Main Menu");
+        System.out.print("\n1: Add Tickets \n2: Edit Ticket Admissions \n3: Back to Main Menu");
     }
 
     private void adminConfirmation() { // options for admin confirmation on an event
@@ -59,7 +59,7 @@ public class View {
         System.out.print("\nChoose which detail to edit. \n1: Event Name. \n2: Event Description. \n3: Event Date.\n4: Event Time.\n5: Event Location.\n6: Cancel.");
     }
 
-    private void eventsInfo(){ //sub menu for events menu option 2
+    private void eventsInfoView(){ //sub menu for events menu option 2
         System.out.print("\n1: Edit details. \n2: See Admin Feedback \n3: Cancel");
         int option  = c.userInt("\n>> ");
         if(option == 1){
@@ -72,7 +72,14 @@ public class View {
         }
     }
 
-    public void adminLogin(){ //admin login view
+    private void addTicketsView(){ //view for option 1 of tickets menu
+        addTicketPrompt();
+        printUserEvents();
+        c.ticketAdmission();
+    }
+
+
+    private void adminLogin(){ //admin login view
         try {
             if(c.loggingIn()){
                 adminMenu();
@@ -83,7 +90,7 @@ public class View {
         } catch (IOException e) { System.out.println("Operation cancelled. Restart application. "+e.getMessage()+"\n");}
     }
 
-    public void userLogin(){ //user login view
+    private void userLogin(){ //user login view
         if(c.checkCurrentUser()){
             subUserMenu();
         }else{
@@ -103,7 +110,11 @@ public class View {
         System.out.print("\nEnter details below. ");
     }
 
-    public void showEvent(Events event){
+    public void addTicketPrompt(){ //add ticket prompt
+        System.out.println("\nChoose what event you would like to add tickets to.");
+    }
+
+    public void showEvent(Events event){ //show current event
         if (c.getUser().getUserName().isEmpty()) {
             System.out.println("\nYou have chosen "+event.getEventName()+", Status: "+event.statusString()
             +", Created by: "+event.userName);
@@ -115,13 +126,21 @@ public class View {
     public void userEventOps(){ //user event options view 
         showEditPrompt(); 
         printUserEvents(); 
+        if(c.getEvents().isEmpty()){
+            System.out.println("No Events available");
+            return;
+        }
         c.seeEvents();
-        eventsInfo();
+        eventsInfoView();
     }
 
     public void adminEventOps(){ //admin event options view after confirm events
         showConfirmPrompt();
         printEvents();
+        if(c.getEvents().isEmpty()){
+            System.out.println("No Events available");
+            return;
+        }
         c.confirmEvents();
     }
 
@@ -135,6 +154,7 @@ public class View {
         return c.userInt("\n>> ");
     }
 
+    // print methods
     public void printChangedEvDeets(Events event, int choice){ //print edited event detail
         switch(choice){
             case 1 -> { System.out.println("Event Name has been changed to "+event.getEventName()); }
@@ -146,7 +166,6 @@ public class View {
         }
     }
     
-    //print methods
     public void printUserEvents(){ //prints events linked to user name
         int i = 0;
         for(Events ev : c.getEvents()){
@@ -255,7 +274,7 @@ public class View {
             try{
                 switch(c.getInput().nextInt()){
                     case 1 -> userEventsMenu();
-                    case 2 -> {}
+                    case 2 -> userTicketsMenu();
                     case 3 -> { System.out.println(); mainMenu(); }
                     default -> { System.out.println(outOfRange); }
             }
@@ -274,7 +293,7 @@ public class View {
         System.out.print("\n>> ");
         try {
             switch(c.getInput().nextInt()){
-                case 1 -> { showCreateEventPrompt(); c.createEvent();}
+                case 1 -> { showCreateEventPrompt(); c.createEvent(); }
                 case 2 -> userEventOps();
                 case 3 -> { System.out.println(); subUserMenu(); }
                 default -> { System.out.println(outOfRange); }
@@ -282,7 +301,27 @@ public class View {
         } catch (InputMismatchException iome) {
             System.err.println(invalidInput);
             c.getInput().nextLine();
-            subUserMenu();
+        }
+    }
+
+    public void userTicketsMenu(){ //sub menu for tickets menu option
+        c.loadEvents();
+        if(c.getEvents().isEmpty()){
+            System.out.println("No available events. Ticket admission cannot be accessed.");
+            return;
+        }
+        ticketsMenu();
+        System.out.print("\n>> ");
+        try{
+            switch (c.getInput().nextInt()) {
+                case 1 -> addTicketsView();
+                case 2 -> {}
+                case 3 -> { System.out.println(); subUserMenu(); }
+                default -> { System.out.println(outOfRange); }
+            }
+        }catch(InputMismatchException e){
+            System.err.println("");
+            c.getInput().nextLine();
         }
     }
 }

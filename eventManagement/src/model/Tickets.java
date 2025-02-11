@@ -11,9 +11,10 @@ public class Tickets {
     private int maxTicketAvailability; //maximum availability of a ticket;
 
 
-    public Tickets(String typeOfTicket, double priceOfTicket, int maximumAvailability, Events events){
+    public Tickets(String typeOfTicket, double priceOfTicket, int currentAvailability, int maximumAvailability){
         this.ticketType = typeOfTicket;
         this.ticketPrice = priceOfTicket;
+        this.ticketAvailability = currentAvailability;
         this.maxTicketAvailability = maximumAvailability;
     }
 
@@ -44,11 +45,16 @@ public class Tickets {
     public void setTicketAvailability(int newTicketAvailability){
         if(ticketAvailability <= maxTicketAvailability){
             this.ticketAvailability = newTicketAvailability;
+            return;
         }
         System.err.println("Cannot exceed maximum availability.");
     }
 
     public void setMaxAvailability(int newMaxAvailability){     //set the max availability of tickets
         this.maxTicketAvailability = newMaxAvailability;
+    }
+
+    public boolean emptyTicket(){
+        return this.ticketType.isEmpty() || this.ticketPrice <= 0.0 || this.maxTicketAvailability <= 0 || this.ticketAvailability <= 0;
     }
 }

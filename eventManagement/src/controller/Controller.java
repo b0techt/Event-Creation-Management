@@ -8,21 +8,24 @@ public class Controller  {
     private final Scanner input = new Scanner(System.in);
     private final Model model;
     private final View view;
-    private final SaveData saveData;
+    private final SaveDataDB saveData;
+    private final LocalData ld;
     private final User user;
     private final Admin admin;
     private Events event;
-    //private Tickets ticket;
+    private Tickets ticket;
     private final String invalidInput = "Invalid input. Try again.\n";
     private final String outOfRange = "Option out of range. Try again.\n";
     
     public Controller(Model m, View v){
         this.model = m;
         this.view = v;
-        this.saveData = new SaveData();
+        this.saveData = new SaveDataDB();
+        this.ld = new LocalData();
         this.user = new User("");
         this.admin = new Admin();
         this.event = null;
+        this.ticket = null;
     }
 
     public Scanner getInput(){
@@ -37,6 +40,11 @@ public class Controller  {
     public int userInt(String prompt){
         System.out.print(prompt);
         return this.input.nextInt();
+    }
+
+    public double userDouble(String prompt){
+        System.out.print(prompt);
+        return this.input.nextDouble();
     }
 
     //start app
@@ -62,7 +70,7 @@ public class Controller  {
     }
 
     public void loadUsers()throws IOException{ //gets list of users from the file 
-        for(User users : this.saveData.listOfUserNames()){
+        for(User users : this.ld.listOfUserNames()){
             model.addUser(users);
         }
     }
@@ -92,6 +100,14 @@ public class Controller  {
     public Events getEvent(){ //gets current event
         return this.event;
     }
+
+    public boolean emptyFieldsCheck(){
+        return this.event.invalidFields();
+    }
+
+    public boolean ticketEmptyFieldsCheck(){
+        return this.ticket.emptyTicket();
+    }
     
     public boolean checkCurrentUser(){ //check if current user is in list of Users list
         getInput().nextLine(); //clear input
@@ -102,6 +118,7 @@ public class Controller  {
     }
     
     public void addUserToFile(){ //adds user to list of users file for admin to see 
+        getInput().nextLine(); //clear input
         String userName = userString("\nUsername (No spaces): ");
         this.user.setUserName(userName);
 
@@ -110,7 +127,7 @@ public class Controller  {
         }else{
             saveData.userIntoDB(getUser().getUserName()); //save user to user db
             model.addUser(getUser()); //update list of users for admin to see
-            System.out.println(saveData.saveUser(getUser().getUserName())+"\n");
+            System.out.println(ld.saveUser(getUser().getUserName())+"\n");
         }
     }
 
@@ -154,48 +171,7 @@ public class Controller  {
             getInput().nextLine(); //clears input
         }
     }
-
-    public void createEvent(){ //method for creating an event --> id, name, description, date, time, location
-        try {
-            getInput().nextLine();
-            String eventName = userString("\nEvent Name: ");
-            String eventDescription = userString("Event Description: ");
-            String eventDate = userString("Event Date (DD-MM-YYYY): ");
-            String eventTime = userString("Event Time (HH:MM): ");
-            String eventLocation = userString("Event Location: ");
-            System.out.println();
-
-            this.event.setEvent(eventName);
-            this.event.setEventDescription(eventDescription);
-            this.event.setEventDate(eventDate);
-            this.event.setEventTime(eventTime);
-            this.event.setEventLocation(eventLocation);
-            
-            if(getEvent().invalidFields()){
-                System.out.println("Errors above. Try again.");
-                createEvent();
-            }else{
-                saveData.saveUserEvent(getEvent(), getUser().getUserName());
-            }
-        } catch (InputMismatchException ime) {
-            System.err.println(invalidInput);
-            getInput().nextLine();
-        }
-    }
-
-    public void editEvent(Events event){ //edit chosen user event
-        //go over this when I get home
-        int choice = userInt("\n>> ");
-        switch(choice){
-            case 1 -> { getInput().nextLine(); String newDetail = userString("\nNew Event Name: "); this.saveData.updateEvent(event, event.userName, newDetail, choice); event.setEvent(newDetail);}
-            case 2 -> { getInput().nextLine(); String newDetail = userString("\nNew Event Description: "); this.saveData.updateEvent(event, event.userName, newDetail, choice); event.setEventDescription(newDetail);}
-            case 3 -> { getInput().nextLine(); String newDetail = userString("\nNew Event Date: "); this.saveData.updateEvent(event, event.userName, newDetail, choice); event.setEventDate(newDetail);}
-            case 4 -> { getInput().nextLine(); String newDetail = userString("\nNew Event Time: "); this.saveData.updateEvent(event, event.userName, newDetail, choice); event.setEventTime(newDetail);}
-            case 5 -> { getInput().nextLine(); String newDetail = userString("\nNew Event Location: "); this.saveData.updateEvent(event, event.userName, newDetail, choice); event.setEventLocation(newDetail);}
-            default -> { return; }
-        }
-    }
-
+    
     public void confirmEvents(){ //admin control to confirm events
         int evn = userInt(">> ");
         if(evn < 0 || evn >= getEvents().size()){
@@ -221,5 +197,113 @@ public class Controller  {
             System.err.println(invalidInput);
             getInput().nextLine();
         }
+    }
+
+    public void ticketAdmission(){ //this and private method below are used to add tickets to event
+        int addOps = userInt(">> ");
+
+        if(addOps < 0 || addOps >= getEvents().size()){
+            System.err.println(outOfRange);
+        }
+
+        setCurrEvent(addOps);
+        createTicket(this.event);
+    }
+
+    private void createTicket(Events event){ //create ticket --> ticket type, price, max avail and curr avail
+        getInput().nextLine(); //clears input
+        try{
+            String ticketType = userString("\nTicket type: ");
+            double ticketPrice = userDouble("Ticket Price (£): ");
+            int ticketMaxAvail = userInt("Maximum Admission: ");
+            int ticketCurrAvail = userInt("Current Admissions: ");
+
+            this.ticket = new Tickets(ticketType, ticketPrice, ticketCurrAvail, ticketMaxAvail);
+
+            if(ticketEmptyFieldsCheck()){
+                System.out.println("Errors above. Try again");
+            }else{
+                saveData.saveTicket(ticket, event, getUser().getUserName());
+            }
+        }catch(InputMismatchException e){
+            System.err.println(invalidInput);
+            getInput().nextLine();
+        }
+
+    }
+
+    public void createEvent(){ //method for creating an event --> id, name, description, date, time, location
+        try {
+            getInput().nextLine();
+            String eventName = userString("\nEvent Name: ");
+            String eventDescription = userString("Event Description: ");
+            String eventDate = userString("Event Date (DD-MM-YYYY): ");
+            String eventTime = userString("Event Time (HH:MM): ");
+            String eventLocation = userString("Event Location: ");
+            System.out.println();
+
+            this.event = new Events(eventName, eventDescription, eventDate, eventTime, eventLocation, user);
+
+            if(emptyFieldsCheck()){
+                System.out.println("Errors above. Try again.");
+            }else{
+                saveData.saveUserEvent(getEvent(), getUser().getUserName());
+            }
+        } catch (InputMismatchException ime) {
+            System.err.println(invalidInput);
+            getInput().nextLine();
+        }
+    }
+
+    public void editEvent(Events event) { // Edit chosen user event
+        int choice = userInt("\n>> ");
+        getInput().nextLine(); // Consume newline
+        
+        String newDetail;
+        switch (choice) {
+            case 1 -> {
+                newDetail = userString("\nNew Event Name: ");
+                event.setEvent(newDetail);
+                if (emptyFieldsCheck()) {
+                    System.out.println("Error: Please try again.");
+                    return;
+                }
+            }
+            case 2 -> {
+                newDetail = userString("\nNew Event Description: ");
+                event.setEventDescription(newDetail);
+                if (emptyFieldsCheck()) {
+                    System.out.println("Error: PLease try again.");
+                    return;
+                }
+            }
+            case 3 -> {
+                newDetail = userString("\nNew Event Date (DD-MM-YYYY): ");
+                event.setEventDate(newDetail);
+                if (emptyFieldsCheck()) {
+                    System.out.println("Error: Please try again.");
+                    return;
+                }
+            }
+            case 4 -> {
+                newDetail = userString("\nNew Event Time (HH:MM): ");
+                event.setEventTime(newDetail);
+                if (emptyFieldsCheck()) {
+                    System.out.println("Error: Please try again.");
+                    return;
+                }
+            }
+            case 5 -> {
+                newDetail = userString("\nNew Event Location: ");
+                event.setEventLocation(newDetail);
+                if (emptyFieldsCheck()) {
+                    System.out.println("Error: Please try again.");
+                    return;
+                }
+            }
+            default -> { return; }
+        }
+        this.saveData.updateEvent(event, event.userName, newDetail, choice);
+        view.printChangedEvDeets(event, choice);
     }
 }

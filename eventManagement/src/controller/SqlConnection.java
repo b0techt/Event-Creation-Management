@@ -1,6 +1,7 @@
 package controller;
 import java.sql.Connection;
 import model.Events;
+import model.Tickets;
 
 public interface SqlConnection {
     public Connection conToDB(); //establish connection to SQL db --> throws a SQL Exception
@@ -9,4 +10,5 @@ public interface SqlConnection {
     public void adminApprove(Events event, String userName, String coninfo, int status);
     public void updateEvent(Events event, String eventChange, String userName, int choice);
     public String adminFeedback(String eventName, String userName);
+    public void saveTicket(Tickets ticket, Events event, String userName);
 }
