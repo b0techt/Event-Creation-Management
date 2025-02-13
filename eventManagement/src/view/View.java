@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.InputMismatchException;
 import model.Events;
 import model.User;
+import model.Tickets;
 
 public class View {
     private Controller c;
@@ -59,6 +60,10 @@ public class View {
         System.out.print("\nChoose which detail to edit. \n1: Event Name. \n2: Event Description. \n3: Event Date.\n4: Event Time.\n5: Event Location.\n6: Cancel.");
     }
 
+    private void displayEditTicketPrompt(){ //print
+        System.out.print("\nChoose which detail to edit. \n1: Ticket Type. \n2: Ticket Price. \n3: Ticket Current Availability. \n4: Ticket Maximum Availability. \n5: Delete Ticket. \n6: Cancel.");
+    }
+
     private void eventsInfoView(){ //sub menu for events menu option 2
         System.out.print("\n1: Edit details. \n2: See Admin Feedback \n3: Cancel");
         int option  = c.userInt("\n>> ");
@@ -66,7 +71,7 @@ public class View {
             displayEditEventPrompt();
             c.editEvent(c.getEvent());
         }else if(option == 2){
-            c.eventSeeOrEdit(c.getEvent());
+            c.callAdminFeedback(c.getEvent());
         }else if(option > 3){
             System.out.println(outOfRange);
         }
@@ -76,10 +81,43 @@ public class View {
         addTicketPrompt();
         printUserEvents();
         c.ticketAdmission();
+        System.out.print("\n1: Continue with Ticket admission. \n2: Go back.");
+        int option = c.userInt("\n>> ");
+        if(option == 1){
+            c.callCT(c.getEvent());
+        }else if(option == 2){
+            return;
+        }
     }
 
+    public void editTicketsView(){ //view for option 2 of tickets menu
+        editTicketPrompt();
+        printUserEvents();
+        c.ticketAdmission();
+        c.loadTickets();
+        if(c.getTickets().isEmpty()){
+            System.out.println("No available tickets.");
+            return;
+        }
+        printTickets(); 
+        continueEditTicketView();
+    }
+
+    private void continueEditTicketView(){
+        System.out.print("\n1: Continue with editing Ticket admission. \n2: Go back.");
+        int option = c.userInt("\n>> ");
+        if(option == 1){
+            System.out.print("\nChoose a Ticket to edit.");
+            c.editAdmission();
+            displayEditTicketPrompt();
+            c.callET(c.getEvent(), c.getTicket());
+        }else if(option == 2){
+            return;
+        }
+    }
 
     private void adminLogin(){ //admin login view
+        loginForAdmin();
         try {
             if(c.loggingIn()){
                 adminMenu();
@@ -98,6 +136,12 @@ public class View {
         }
     }
 
+    private void createNewUserView(){ //create new user view
+        c.getInput().nextLine(); //clear input
+        String userName = c.userString("\nUsername (No spaces): ");
+        c.addUserToFile(userName);
+    }
+
     public void showEditPrompt(){ //user edit prompt
         System.out.println("\nChoose which event you would like to edit. Edited events will need to be reapproved.\n");
     }
@@ -108,10 +152,15 @@ public class View {
 
     public void showCreateEventPrompt(){ //user event creation prompt
         System.out.print("\nEnter details below. ");
+        c.createEvent();
     }
 
     public void addTicketPrompt(){ //add ticket prompt
-        System.out.println("\nChoose what event you would like to add tickets to.");
+        System.out.println("\nChoose what event you would like to add tickets to. Edited tickets will reset the events to Unapproved.");
+    }
+
+    public void editTicketPrompt(){ //edit ticket prompt
+        System.out.println("\nChoose what event you would like to edit tickets for.");
     }
 
     public void showEvent(Events event){ //show current event
@@ -185,12 +234,24 @@ public class View {
         c.loadEventsAdmin();
         int i = 0;
         for(Events ev : c.getEvents()){
-            System.out.print(i+" Created by: "+ev.userName + " Event Name: "+ev.getEventName() 
-            +" Event Description: " + ev.getEventDescription()
-            +" Event Date: "+ev.getEventDate()
-            +" Event Time: "+ev.getEventTime()
-            +" Event Location: "+ev.getEventLocation()
-            +" Status: "+ev.statusString());
+            System.out.print(i+" Created by: "+ev.userName + ", Event Name: "+ev.getEventName() 
+            +", Event Description: " + ev.getEventDescription()
+            +", Event Date: "+ev.getEventDate()
+            +", Event Time: "+ev.getEventTime()
+            +", Event Location: "+ev.getEventLocation()
+            +", Status: "+ev.statusString());
+            i++;
+            System.out.println(); //new line
+        }
+    }
+
+    public void printTickets(){
+        int i = 0;
+        for(Tickets ticket : c.getTickets()){
+            System.out.print(i+" Ticket type: "+ticket.getTicketType()
+            +", Ticket Price (£): "+ticket.getTicketPrice()
+            +", Ticket Current Availability: "+ticket.getAvailability()
+            +", Ticket Maxmimum Availability: "+ticket.getMaxAvailability());
             i++;
             System.out.println(); //new line
         }
@@ -211,7 +272,7 @@ public class View {
                 int choice = c.getInput().nextInt();
                 switch (choice) {
                     case 1 -> userMenu(); 
-                    case 2 -> { loginForAdmin(); adminLogin(); }
+                    case 2 -> adminLogin();
                     case 3 -> { running = false; c.getInput().close(); closingMessage(); } //exit
                     default -> { System.err.println(outOfRange); }
                 }
@@ -231,7 +292,7 @@ public class View {
                 int choice = c.getInput().nextInt();
                 switch (choice) {
                     case 1 -> userLogin();
-                    case 2 -> c.addUserToFile();
+                    case 2 -> createNewUserView();
                     case 3 -> { System.out.println(); mainMenu(); }
                     default -> { System.err.println(outOfRange); }
                 }
@@ -250,7 +311,7 @@ public class View {
             try {
                 int choice = c.getInput().nextInt();
                 switch (choice) {
-                    case 1 -> { printUsersFromFile(); adminMenu(); }
+                    case 1 -> printUsersFromFile();
                     case 2 -> adminEventOps();
                     case 3 -> { System.out.println(); mainMenu(); }
                     default -> { System.err.println(outOfRange); }
@@ -262,11 +323,8 @@ public class View {
         }
     }
 
-    /*
-     * in events menu --> option 2: edit events --> 1. See Events 2. Back to Events Menu
-     */
-
     public void subUserMenu(){ //sub user menu after current user option
+        c.loadEvents();
         while(running){
             System.out.print("\nWelcome " + c.getUser().getUserName());
             secondUserMenu();
@@ -288,12 +346,11 @@ public class View {
     }
 
     public void userEventsMenu(){ //sub menu for events menu option
-        c.loadEvents();
         eventsMenu();
         System.out.print("\n>> ");
         try {
             switch(c.getInput().nextInt()){
-                case 1 -> { showCreateEventPrompt(); c.createEvent(); }
+                case 1 -> showCreateEventPrompt();
                 case 2 -> userEventOps();
                 case 3 -> { System.out.println(); subUserMenu(); }
                 default -> { System.out.println(outOfRange); }
@@ -305,7 +362,6 @@ public class View {
     }
 
     public void userTicketsMenu(){ //sub menu for tickets menu option
-        c.loadEvents();
         if(c.getEvents().isEmpty()){
             System.out.println("No available events. Ticket admission cannot be accessed.");
             return;
@@ -315,12 +371,12 @@ public class View {
         try{
             switch (c.getInput().nextInt()) {
                 case 1 -> addTicketsView();
-                case 2 -> {}
+                case 2 -> editTicketsView();
                 case 3 -> { System.out.println(); subUserMenu(); }
                 default -> { System.out.println(outOfRange); }
             }
         }catch(InputMismatchException e){
-            System.err.println("");
+            System.err.println(invalidInput);
             c.getInput().nextLine();
         }
     }

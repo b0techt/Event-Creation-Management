@@ -69,6 +69,10 @@ public class Controller  {
         return this.model.getEvents();
     }
 
+    public List<Tickets>getTickets(){
+        return this.model.getTickets();
+    }
+
     public void loadUsers()throws IOException{ //gets list of users from the file 
         for(User users : this.ld.listOfUserNames()){
             model.addUser(users);
@@ -89,23 +93,38 @@ public class Controller  {
         }
     }
 
+    public void loadTickets(){ //loads user tickets
+        getTickets().clear();
+        for(Tickets ticket : this.saveData.getUserTickets(getUser().getUserName(), getEvent())){
+            model.addTicket(ticket);
+        }
+    }
+
     public boolean adminLogin(String name, String password){ //login for admin option
         return this.admin.login(name, password);
     }
 
-    public void setCurrEvent(int n){
+    public void setCurrEvent(int n){ //sets current event
         this.event = getEvents().get(n);
+    }
+
+    public void setCurrentTicket(int n){ //sets current ticket
+        this.ticket = getTickets().get(n);
     }
 
     public Events getEvent(){ //gets current event
         return this.event;
     }
 
+    public Tickets getTicket(){ //gets current ticket
+        return this.ticket;
+    }
+
     public boolean emptyFieldsCheck(){
         return this.event.invalidFields();
     }
 
-    public boolean ticketEmptyFieldsCheck(){
+    public boolean ticketEmptyFieldsCheck(){ //checks if any of the ticket fields are empty
         return this.ticket.emptyTicket();
     }
     
@@ -117,9 +136,7 @@ public class Controller  {
         return model.isUserCreated(getUser().getUserName());
     }
     
-    public void addUserToFile(){ //adds user to list of users file for admin to see 
-        getInput().nextLine(); //clear input
-        String userName = userString("\nUsername (No spaces): ");
+    public void addUserToFile(String userName){ //adds user to list of users file for admin to see 
         this.user.setUserName(userName);
 
         if (model.isUserCreated(getUser().getUserName())) {
@@ -146,8 +163,8 @@ public class Controller  {
         return false;
     }
 
-    public void eventSeeOrEdit(Events chosenEvent){ //sends data to view for event display
-        editChoice(chosenEvent);
+    public void callAdminFeedback(Events chosenEvent){ //sends data to view for event display
+        viewAdminFeedback(chosenEvent);
     }
     
     public void seeEvents(){ //method to see events and edit if needed.
@@ -160,7 +177,7 @@ public class Controller  {
         setCurrEvent(editOps);
     }
 
-    private void editChoice(Events selectedEvent){ //method for option 2 on events menu, updates the view
+    private void viewAdminFeedback(Events selectedEvent){ //method for option 2 on events menu, updates the view
         try {
             String feedback = this.saveData.adminFeedback(selectedEvent.getEventName(), getUser().getUserName()); 
             view.displayAdminFeedback(feedback); //get rid of view call
@@ -207,7 +224,24 @@ public class Controller  {
         }
 
         setCurrEvent(addOps);
-        createTicket(this.event);
+    }
+
+    public void editAdmission(){
+        int editOps = userInt("\n>> ");
+
+        if(editOps < 0 || editOps >= getEvents().size()){
+            System.err.println(outOfRange);
+        }
+
+        setCurrentTicket(editOps);
+    }
+
+    public void callCT(Events event){ //calls create ticket method
+        createTicket(event);
+    }
+
+    public void callET(Events events, Tickets ticket){ //calls edit ticke method
+        editTicket(ticket);
     }
 
     private void createTicket(Events event){ //create ticket --> ticket type, price, max avail and curr avail
@@ -230,6 +264,60 @@ public class Controller  {
             getInput().nextLine();
         }
 
+    }
+
+    private void editTicket(Tickets ticket){
+        int choice = userInt("\n>> ");
+        getInput().nextLine(); //clears input
+        String ticktype;
+        int tickAvail;
+        double tickprice;
+
+        switch (choice) {
+            case 1 -> {
+                ticktype = userString("\nNew Ticket Type: ");
+                ticket.setTicketType(ticktype);
+                if (ticketEmptyFieldsCheck()) {
+                    System.out.println("Error: Please try again.");
+                    return;
+                }
+            }
+            case 2 -> {
+                tickprice = userDouble("\nNew Ticket Price (£): ");
+                ticket.setTicketPrice(tickprice);
+                if (ticketEmptyFieldsCheck()) {
+                    System.out.println("Error: PLease try again.");
+                    return;
+                }
+            }
+            case 3 -> {
+                tickAvail = userInt("\nNew Ticket Current Availability: ");
+                ticket.setTicketAvailability(tickAvail);
+                if (ticketEmptyFieldsCheck()) {
+                    System.out.println("Error: Please try again.");
+                    return;
+                }
+            }
+            case 4 -> {
+                tickAvail = userInt("\nNew Ticket Maximum Availability: ");
+                ticket.setMaxAvailability(tickAvail);
+                if (ticketEmptyFieldsCheck()) {
+                    System.out.println("Error: Please try again.");
+                    return;
+                }
+            }
+            case 5 -> {
+               String delete = userString("\nAre you sure you want to delete this ticket? \nY or N: ");
+                if (delete.equalsIgnoreCase("Y")) {
+                    this.saveData.deleteTicket(getEvent(), ticket, getUser().getUserName());
+                    return;
+                }else{
+                    return;
+                }
+            }
+            default -> { return; }
+        }
+        this.saveData.editTicket(ticket, getEvent(), getUser().getUserName(), choice);
     }
 
     public void createEvent(){ //method for creating an event --> id, name, description, date, time, location
