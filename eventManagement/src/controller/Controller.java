@@ -127,6 +127,15 @@ public class Controller  {
     public boolean ticketEmptyFieldsCheck(){ //checks if any of the ticket fields are empty
         return this.ticket.emptyTicket();
     }
+
+    public boolean notSameEventName(String evName){ //stops reusing event name or duplication events
+        for(Events event : getEvents()){
+            if(event.getEventName().equals(evName)){
+                return true;
+            }
+        }
+        return false;
+    }
     
     public boolean checkCurrentUser(){ //check if current user is in list of Users list
         getInput().nextLine(); //clear input
@@ -332,7 +341,7 @@ public class Controller  {
 
             this.event = new Events(eventName, eventDescription, eventDate, eventTime, eventLocation, user);
 
-            if(emptyFieldsCheck()){
+            if(emptyFieldsCheck() || notSameEventName(eventName)){
                 System.out.println("Errors above. Try again.");
             }else{
                 saveData.saveUserEvent(getEvent(), getUser().getUserName());
