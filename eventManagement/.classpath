@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/21.0.5-win32-x86_64"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-21"/>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="lib" path="c:/Users/Administrator/eclipse/postgres-42/postgresql-42.7.4.jar"/>
+	<classpathentry kind="lib" path="c:/External_jars/hamcrest-core-1.3.jar"/>
+	<classpathentry kind="lib" path="c:/External_jars/postgresql-42.7.4.jar"/>
+	<classpathentry kind="lib" path="c:/External_jars/junit-4.13.2.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

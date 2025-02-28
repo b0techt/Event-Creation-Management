@@ -1,4 +1,3 @@
-
 import model.Model;
 import controller.Controller;
 import java.io.IOException;
